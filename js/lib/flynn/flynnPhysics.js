@@ -112,7 +112,7 @@ FlynnBody.prototype.fixtureDefaults = {
     density: 2,
     friction: 1,
     // restitution: 0.2
-    restitution: 0.95
+    restitution: 0.7,
 };
  
 FlynnBody.prototype.definitionDefaults = {

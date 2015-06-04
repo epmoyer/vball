@@ -3,7 +3,7 @@
 //    Core gameplay
 //--------------------------------------------
 var GRAVITY_X = 0;
-var GRAVITY_Y = 9.8;
+var GRAVITY_Y = 4.0; //9.8;
 var RENDER_SCALE = 100; // 100 pixels == 1 meter
 
 var StateGame = FlynnState.extend({
@@ -71,17 +71,61 @@ var StateGame = FlynnState.extend({
 			height: WALL_THICKNESS/RENDER_SCALE,
 			width: (this.canvasWidth-2*WALL_THICKNESS)/RENDER_SCALE });
 		
+
 		var SPAWN_MARGIN = 50;
-		for(var i = 0; i<20; i++){
+		for(var i = 0; i<0; i++){
 			new FlynnBody(this.physics, {
 				x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
 				y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE, shape:"circle" });
 			new FlynnBody(this.physics, {
 				x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
 				y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE});
-			// new FlynnBody(this.physics, { x: 6, y: 4 });
-			// new FlynnBody(this.physics, { x: 8, y: 5 });
 		}
+		var ROBOT_BODY_WIDTH = 40;
+		var ROBOT_BODY_HEIGHT = 20;
+		body = new FlynnBody(this.physics, {
+				x: 200/RENDER_SCALE,
+				y: 200/RENDER_SCALE,
+				width: ROBOT_BODY_WIDTH/RENDER_SCALE,
+				height: ROBOT_BODY_HEIGHT/RENDER_SCALE,
+			}).body;
+		var ROBOT_ARM_WIDTH = 10;
+		var ROBOT_ARM_HEIGHT = 45;
+		leftArm = new FlynnBody(this.physics, {
+				x: (200 - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 -.1)/RENDER_SCALE,
+				y: 200/RENDER_SCALE,
+				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
+				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
+			}).body;
+		rightArm = new FlynnBody(this.physics, {
+				x: (200 + ROBOT_BODY_WIDTH/2 + ROBOT_ARM_WIDTH/2 )/RENDER_SCALE,
+				y: 200/RENDER_SCALE,
+				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
+				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
+			}).body;
+
+
+		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
+		def.Initialize(leftArm, body,
+			new b2Vec2((200-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE),
+			new b2Vec2(0,1));
+			// new b2Vec2((200-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE));
+		def.enableLimit = true;
+		def.lowerTranslation = -(ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		//def.localAxis1 = new b2Vec2(1,0);
+		var joint = this.physics.world.CreateJoint(def);
+
+		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
+		def.Initialize(rightArm, body,
+			new b2Vec2((200+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE),
+			new b2Vec2(0,1));
+			// new b2Vec2((200-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE));
+		def.enableLimit = true;
+		def.lowerTranslation = -(ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		//def.localAxis1 = new b2Vec2(1,0);
+		var joint = this.physics.world.CreateJoint(def);
 
 		// Timers
 		//this.mcp.timers.add('shipRespawnDelay', ShipRespawnDelayGameStartTicks, null);  // Start game with a delay (for start sound to finish)
