@@ -3,8 +3,21 @@
 //    Core gameplay
 //--------------------------------------------
 var GRAVITY_X = 0;
-var GRAVITY_Y = 4.0; //9.8;
+var GRAVITY_Y = 0.0; //9.8;
 var RENDER_SCALE = 100; // 100 pixels == 1 meter
+
+var PUNCH_EXTEND_SPEED = 8.0;
+var PUNCH_RETRACT_SPEED = 2.0;
+var PUNCH_EXTEND_TICKS = 4;
+var PUNCH_RETRACT_TICKS = 6;
+var PUNCH_MAX_FORCE = 4;
+
+var ROBOT_BODY_WIDTH = 40;
+var ROBOT_BODY_HEIGHT = 20;
+var ROBOT_ARM_WIDTH = 10;
+var ROBOT_ARM_HEIGHT = 45;
+
+var ROBOT_THRUST_IMPULSE = 0.02;
 
 var StateGame = FlynnState.extend({
 
@@ -81,16 +94,13 @@ var StateGame = FlynnState.extend({
 				x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
 				y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE});
 		}
-		var ROBOT_BODY_WIDTH = 40;
-		var ROBOT_BODY_HEIGHT = 20;
-		body = new FlynnBody(this.physics, {
+
+		this.robotBody = new FlynnBody(this.physics, {
 				x: 200/RENDER_SCALE,
 				y: 200/RENDER_SCALE,
 				width: ROBOT_BODY_WIDTH/RENDER_SCALE,
 				height: ROBOT_BODY_HEIGHT/RENDER_SCALE,
 			}).body;
-		var ROBOT_ARM_WIDTH = 10;
-		var ROBOT_ARM_HEIGHT = 45;
 		leftArm = new FlynnBody(this.physics, {
 				x: (200 - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 -.1)/RENDER_SCALE,
 				y: 200/RENDER_SCALE,
@@ -106,30 +116,47 @@ var StateGame = FlynnState.extend({
 
 
 		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
-		def.Initialize(leftArm, body,
+		def.Initialize(leftArm, this.robotBody,
 			new b2Vec2((200-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE),
 			new b2Vec2(0,1));
-			// new b2Vec2((200-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE));
 		def.enableLimit = true;
-		def.lowerTranslation = -(ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		//def.localAxis1 = new b2Vec2(1,0);
-		var joint = this.physics.world.CreateJoint(def);
+		// def.lowerTranslation = -(ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		// def.upperTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;		
+		def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		def.enableMotor = false;
+        def.maxMotorForce = PUNCH_MAX_FORCE;
+        def.motorSpeed = 4.0;
+		this.leftArmJoint = this.physics.world.CreateJoint(def);
+		//this.leftArmJoint.EnableMotor(true);
 
 		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
-		def.Initialize(rightArm, body,
+		def.Initialize(rightArm, this.robotBody,
 			new b2Vec2((200+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE),
 			new b2Vec2(0,1));
-			// new b2Vec2((200-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE));
 		def.enableLimit = true;
-		def.lowerTranslation = -(ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		//def.localAxis1 = new b2Vec2(1,0);
-		var joint = this.physics.world.CreateJoint(def);
+		def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+		def.enableMotor = false;
+        def.maxMotorForce = PUNCH_MAX_FORCE;
+        def.motorSpeed = 4.0;
+		this.rightArmJoint  = this.physics.world.CreateJoint(def);
+
+		// Ball
+		new FlynnBody(this.physics, {
+				x: this.canvasWidth/2/RENDER_SCALE,
+				y: this.canvasHeight/2/RENDER_SCALE,
+				shape:"circle",
+				radius: .2
+				});
 
 		// Timers
 		//this.mcp.timers.add('shipRespawnDelay', ShipRespawnDelayGameStartTicks, null);  // Start game with a delay (for start sound to finish)
 		//this.mcp.timers.add('shipRespawnAnimation', 0, null);
+		this.mcp.timers.add('PunchLeftExtend', 0);
+		this.mcp.timers.add('PunchLeftRetract', 0);
+		this.mcp.timers.add('PunchRightExtend', 0);
+		this.mcp.timers.add('PunchRightRetract', 0);
 	},
 
 
@@ -239,6 +266,53 @@ var StateGame = FlynnState.extend({
 				this.doShipDie();
 			}
 		}
+
+		var angle, force, center, engine_v, center_v, engine_world_v;
+		angle = this.robotBody.GetAngle() - Math.PI/2;
+		force = ROBOT_THRUST_IMPULSE;
+		center = this.robotBody.GetWorldCenter();
+		center_v = new Victor(center.x, center.y);
+		if(input.virtualButtonIsDown("thrust left")){
+			engine_v = new Victor(-ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
+			engine_world_v = engine_v.clone().rotate((angle + Math.PI/2)).add(center_v);
+			console.log(center_v, engine_v, engine_world_v);
+			this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
+		}
+		if(input.virtualButtonIsDown("thrust right")){
+			engine_v = new Victor(ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
+			engine_world_v = engine_v.clone().rotate((angle + Math.PI/2)).add(center_v);
+			console.log(center_v, engine_v, engine_world_v);
+			this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
+		}
+
+		if(input.virtualButtonIsPressed("punch left")){
+			this.leftArmJoint.SetMotorSpeed(PUNCH_EXTEND_SPEED);
+			this.leftArmJoint.EnableMotor(true);
+			this.mcp.timers.set('PunchLeftExtend', PUNCH_EXTEND_TICKS);
+		}
+		if(this.mcp.timers.hasExpired('PunchLeftExtend')){
+			this.leftArmJoint.SetMotorSpeed(-PUNCH_RETRACT_SPEED);
+			this.mcp.timers.set('PunchLeftRetract', PUNCH_RETRACT_TICKS);
+		}
+		if(this.mcp.timers.hasExpired('PunchLeftExtend')){
+			this.leftArmJoint.SetMotorSpeed(0);
+			this.leftArmJoint.EnableMotor(false);
+		}
+
+		if(input.virtualButtonIsPressed("punch right")){
+			this.rightArmJoint.SetMotorSpeed(PUNCH_EXTEND_SPEED);
+			this.rightArmJoint.EnableMotor(true);
+			this.mcp.timers.set('PunchRightExtend', PUNCH_EXTEND_TICKS);
+		}
+		if(this.mcp.timers.hasExpired('PunchRightExtend')){
+			this.rightArmJoint.SetMotorSpeed(-PUNCH_RETRACT_SPEED);
+			this.mcp.timers.set('PunchRightRetract', PUNCH_RETRACT_TICKS);
+		}
+		if(this.mcp.timers.hasExpired('PunchRightExtend')){
+			this.rightArmJoint.SetMotorSpeed(0);
+			this.rightArmJoint.EnableMotor(false);
+		}
+
 		
 		// if(!this.ship.visible){
 		// 	if (input.virtualButtonIsPressed("UI_enter")){
