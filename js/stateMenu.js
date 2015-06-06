@@ -80,7 +80,7 @@ var StateMenu = FlynnState.extend({
             ctx.vectorText("V-BALL", 10,  x_pos + 3, y_pos +3, null, FlynnColors.MAGENTA);
         }
 
-        ctx.vectorText("VERSION 0.1", 1.5, null, 140, null, FlynnColors.CYAN);
+        ctx.vectorText("VERSION 0.2", 1.5, null, 140, null, FlynnColors.CYAN);
 
         var startText;
         var controlsText1, controlsText2;

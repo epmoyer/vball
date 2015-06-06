@@ -52,6 +52,12 @@ var StateGame = FlynnState.extend({
 		// 	volume: 0.5,
 		// });
 
+		var names = this.mcp.input.getConfigurableVirtualButtonNames();
+		this.controls = [];
+		for(var i=0, len=names.length; i<len; i++){
+			this.controls.push(names[i] + ' : ' + this.mcp.input.getVirtualButtonBoundKeyName(names[i]));
+		}
+
 		// Game Clock
 		this.gameClock = 0;
 
@@ -384,6 +390,12 @@ var StateGame = FlynnState.extend({
 		//------------
 		// Text
 		//------------
+		var y = 50;
+		var x = 50;
+		for(var i = 0, len = this.controls.length; i<len; i++){
+			ctx.vectorText(this.controls[i], 2, x, y, null, FlynnColors.GRAY);
+			y += 20;
+		}
 
 		// Game Over
 		if(this.gameOver){

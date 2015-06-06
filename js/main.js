@@ -38,8 +38,8 @@ var Game = Class.extend({
 
         // Setup inputs
 		this.input.addVirtualButton('punch left', FlynnKeyboardMap['a'], FlynnConfigurable);
-		this.input.addVirtualButton('thrust left', FlynnKeyboardMap['z'], FlynnConfigurable);
 		this.input.addVirtualButton('punch right', FlynnKeyboardMap['k'], FlynnConfigurable);
+		this.input.addVirtualButton('thrust left', FlynnKeyboardMap['z'], FlynnConfigurable);
 		this.input.addVirtualButton('thrust right', FlynnKeyboardMap['m'], FlynnConfigurable);
 		if(this.mcp.developerModeEnabled){
 			this.input.addVirtualButton('dev_metrics', FlynnKeyboardMap['6'], FlynnNotConfigurable);
