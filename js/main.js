@@ -37,11 +37,30 @@ var Game = Class.extend({
 		this.mcp.nextState = States.MENU;
 
         // Setup inputs
-		this.input.addVirtualButton('left', FlynnKeyboardMap['a'], FlynnConfigurable);
-		this.input.addVirtualButton('right', FlynnKeyboardMap['s'], FlynnConfigurable);
-		this.input.addVirtualButton('thrust', FlynnKeyboardMap['j'], FlynnConfigurable);
-		this.input.addVirtualButton('punch left', FlynnKeyboardMap['k'], FlynnConfigurable);
-		this.input.addVirtualButton('punch right', FlynnKeyboardMap['l'], FlynnConfigurable);
+		// this.input.addVirtualButton('P1 left', FlynnKeyboardMap['a'], FlynnConfigurable);
+		// this.input.addVirtualButton('P1 right', FlynnKeyboardMap['s'], FlynnConfigurable);
+		// this.input.addVirtualButton('P1 thrust', FlynnKeyboardMap['j'], FlynnConfigurable);
+		// this.input.addVirtualButton('P1 punch left', FlynnKeyboardMap['k'], FlynnConfigurable);
+		// this.input.addVirtualButton('P1 punch right', FlynnKeyboardMap['l'], FlynnConfigurable);
+
+		// this.input.addVirtualButton('P2 left', FlynnKeyboardMap['q'], FlynnConfigurable);
+		// this.input.addVirtualButton('P2 right', FlynnKeyboardMap['w'], FlynnConfigurable);
+		// this.input.addVirtualButton('P2 thrust', FlynnKeyboardMap['i'], FlynnConfigurable);
+		// this.input.addVirtualButton('P2 punch left', FlynnKeyboardMap['o'], FlynnConfigurable);
+		// this.input.addVirtualButton('P2 punch right', FlynnKeyboardMap['p'], FlynnConfigurable);
+
+		this.input.addVirtualButton('P1 left', FlynnKeyboardMap['a'], FlynnConfigurable);
+		this.input.addVirtualButton('P1 right', FlynnKeyboardMap['s'], FlynnConfigurable);
+		this.input.addVirtualButton('P1 thrust', FlynnKeyboardMap['d'], FlynnConfigurable);
+		this.input.addVirtualButton('P1 punch left', FlynnKeyboardMap['f'], FlynnConfigurable);
+		this.input.addVirtualButton('P1 punch right', FlynnKeyboardMap['g'], FlynnConfigurable);
+
+		this.input.addVirtualButton('P2 left', FlynnKeyboardMap['i'], FlynnConfigurable);
+		this.input.addVirtualButton('P2 right', FlynnKeyboardMap['o'], FlynnConfigurable);
+		this.input.addVirtualButton('P2 thrust', FlynnKeyboardMap['p'], FlynnConfigurable);
+		this.input.addVirtualButton('P2 punch left', FlynnKeyboardMap['['], FlynnConfigurable);
+		this.input.addVirtualButton('P2 punch right', FlynnKeyboardMap[']'], FlynnConfigurable);
+
 		if(this.mcp.developerModeEnabled){
 			this.input.addVirtualButton('dev_metrics', FlynnKeyboardMap['6'], FlynnNotConfigurable);
 			this.input.addVirtualButton('dev_slow_mo', FlynnKeyboardMap['7'], FlynnNotConfigurable);
@@ -59,11 +78,16 @@ var Game = Class.extend({
 		}
 
 		// Options
-		this.mcp.optionManager.addOptionFromVirtualButton('left');
-		this.mcp.optionManager.addOptionFromVirtualButton('right');
-		this.mcp.optionManager.addOptionFromVirtualButton('thrust');
-		this.mcp.optionManager.addOptionFromVirtualButton('punch left');
-		this.mcp.optionManager.addOptionFromVirtualButton('punch right');
+		this.mcp.optionManager.addOptionFromVirtualButton('P1 left');
+		this.mcp.optionManager.addOptionFromVirtualButton('P1 right');
+		this.mcp.optionManager.addOptionFromVirtualButton('P1 thrust');
+		this.mcp.optionManager.addOptionFromVirtualButton('P1 punch left');
+		this.mcp.optionManager.addOptionFromVirtualButton('P1 punch right');
+		this.mcp.optionManager.addOptionFromVirtualButton('P2 left');
+		this.mcp.optionManager.addOptionFromVirtualButton('P2 right');
+		this.mcp.optionManager.addOptionFromVirtualButton('P2 thrust');
+		this.mcp.optionManager.addOptionFromVirtualButton('P2 punch left');
+		this.mcp.optionManager.addOptionFromVirtualButton('P2 punch right');
 		this.mcp.optionManager.addOption('musicEnabled', FlynnOptionType.BOOLEAN, true, true, 'MUSIC', null, null);
 		this.mcp.optionManager.addOption('resetScores', FlynnOptionType.COMMAND, true, true, 'RESET HIGH SCORES', null,
 			function(){self.resetScores();});

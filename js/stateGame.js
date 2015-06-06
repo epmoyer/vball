@@ -69,7 +69,7 @@ var StateGame = FlynnState.extend({
 
 		this.goalsRemaining = 3;
 		this.highscore = this.mcp.highscores[0][1];
-		this.rotationDampenPending = false;
+		this.rotationDampenPending = [false, false];
 	
 		this.soundBounce = new Howl({
 			src: ['sounds/Blocked.ogg','sounds/Blocked.mp3'],
@@ -267,10 +267,14 @@ var StateGame = FlynnState.extend({
 		// Timers
 		//this.mcp.timers.add('shipRespawnDelay', ShipRespawnDelayGameStartTicks, null);  // Start game with a delay (for start sound to finish)
 		//this.mcp.timers.add('shipRespawnAnimation', 0, null);
-		this.mcp.timers.add('PunchLeftExtend', 0);
-		this.mcp.timers.add('PunchLeftRetract', 0);
-		this.mcp.timers.add('PunchRightExtend', 0);
-		this.mcp.timers.add('PunchRightRetract', 0);
+		this.mcp.timers.add('P1 PunchLeftExtend', 0);
+		this.mcp.timers.add('P1 PunchLeftRetract', 0);
+		this.mcp.timers.add('P1 PunchRightExtend', 0);
+		this.mcp.timers.add('P1 PunchRightRetract', 0);
+		this.mcp.timers.add('P2 PunchLeftExtend', 0);
+		this.mcp.timers.add('P2 PunchLeftRetract', 0);
+		this.mcp.timers.add('P2 PunchRightExtend', 0);
+		this.mcp.timers.add('P2 PunchRightRetract', 0);
 
 		this.ballBody.setHome();
 
@@ -345,93 +349,61 @@ var StateGame = FlynnState.extend({
 			this.mcp.nextState = States.MENU;
 		}
 
-		var angle, force, center, engine_v, center_v, engine_world_v;
-		angle = this.robotBody[0].GetAngle() - Math.PI/2;
-		force = ROBOT_THRUST_IMPULSE;
-		center = this.robotBody[0].GetWorldCenter();
-		center_v = new Victor(center.x, center.y);
-		// if(input.virtualButtonIsDown("thrust left")){
-		// 	engine_v = new Victor(-ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
-		// 	engine_world_v = engine_v.clone().rotate((angle + Math.PI/2)).add(center_v);
-		// 	console.log(center_v, engine_v, engine_world_v);
-		// 	this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
-		// }
-		// if(input.virtualButtonIsDown("thrust right")){
-		// 	engine_v = new Victor(ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
-		// 	engine_world_v = engine_v.clone().rotate((angle + Math.PI/2)).add(center_v);
-		// 	console.log(center_v, engine_v, engine_world_v);
-		// 	this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
-		// }
-		var rotationApplied = false;
-		if(input.virtualButtonIsDown("left")){
-			// engine_v = new Victor(-ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
-			// engine_world_v = engine_v.clone().rotate((angle + Math.PI/2)).add(center_v);
-			// //console.log(center_v, engine_v, engine_world_v);
-			// this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
-			// this.robotBody.ApplyTorque(-force);
+		var angle, force, center, engine_v, center_v, engine_world_v, i, len;
+		for(i=0, len=this.numPlayers; i<len; i++){
+			pNum = 'P' + (i+1) + ' ';
+			angle = this.robotBody[i].GetAngle() - Math.PI/2;
+			force = ROBOT_THRUST_IMPULSE;
+			center = this.robotBody[i].GetWorldCenter();
+			center_v = new Victor(center.x, center.y);
+			var rotationApplied = false;
+			if(input.virtualButtonIsDown(pNum + 'left')){
+				this.robotBody[i].SetAngularVelocity(-ROBOT_ROTATE_RATE);
+				this.rotationDampenPending = true;
+				rotationApplied = true;
+			}
+			if(input.virtualButtonIsDown(pNum + 'right')){
+				this.robotBody[i].SetAngularVelocity(ROBOT_ROTATE_RATE);
+				this.rotationDampenPending = true;
+				rotationApplied = true;
+			}
+			if(!rotationApplied && this.rotationDampenPending){
+				this.robotBody[i].SetAngularVelocity(0);
+				this.rotationDampenPending[i] = false;
+				console.log('dampened');
+			}
 
-			// if(this.robotBody.GetAngularVelocity() > -ROBOT_ANGULAR_IMPULSE_LIMIT){
-			// 	this.robotBody.ApplyAngularImpulse(-ROBOT_ANGULAR_IMPULSE);
-			// }
-			this.robotBody[0].SetAngularVelocity(-ROBOT_ROTATE_RATE);
-			this.rotationDampenPending = true;
-			rotationApplied = true;
-		}
-		if(input.virtualButtonIsDown("right")){
-			// engine_v = new Victor(ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
-			// engine_world_v = engine_v.clone().rotate((angle + Math.PI/2)).add(center_v);
-			// //console.log(center_v, engine_v, engine_world_v);
-			// this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
-			// this.robotBody.ApplyTorque(force);
-			
-			// if(this.robotBody.GetAngularVelocity() < ROBOT_ANGULAR_IMPULSE_LIMIT){
-			// 	this.robotBody.ApplyAngularImpulse(ROBOT_ANGULAR_IMPULSE);
-			// }
-			this.robotBody[0].SetAngularVelocity(ROBOT_ROTATE_RATE);
-			this.rotationDampenPending = true;
-			rotationApplied = true;
-		}
-		if(!rotationApplied && this.rotationDampenPending){
-			this.robotBody[0].SetAngularVelocity(0);
-			// this.leftArm.SetAngularVelocity(0);
-			// this.rightArm.SetAngularVelocity(0);
-			// var vel = this.robotBody.GetLinearVelocity();
-			// this.leftArm.SetLinearVelocity(vel.Copy());
-			// this.rightArm.SetLinearVelocity(vel.Copy());
-			this.rotationDampenPending = false;
-			console.log("dampened");
-		}
+			if(input.virtualButtonIsDown(pNum + 'thrust')){
+				this.robotBody[i].ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
+			}
 
-		if(input.virtualButtonIsDown("thrust")){
-			this.robotBody[0].ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
-		}
+			if(input.virtualButtonIsPressed(pNum + 'punch left')){
+				this.leftArmJoint[i].SetMotorSpeed(PUNCH_EXTEND_SPEED);
+				this.leftArmJoint[i].EnableMotor(true);
+				this.mcp.timers.set(pNum + 'PunchLeftExtend', PUNCH_EXTEND_TICKS);
+			}
+			if(this.mcp.timers.hasExpired(pNum + 'PunchLeftExtend')){
+				this.leftArmJoint[i].SetMotorSpeed(-PUNCH_RETRACT_SPEED);
+				this.mcp.timers.set(pNum + 'PunchLeftRetract', PUNCH_RETRACT_TICKS);
+			}
+			if(this.mcp.timers.hasExpired(pNum + 'PunchLeftRetract')){
+				// this.leftArmJoint.SetMotorSpeed(0);
+				// this.leftArmJoint.EnableMotor(false);
+			}
 
-		if(input.virtualButtonIsPressed("punch left")){
-			this.leftArmJoint[0].SetMotorSpeed(PUNCH_EXTEND_SPEED);
-			this.leftArmJoint[0].EnableMotor(true);
-			this.mcp.timers.set('PunchLeftExtend', PUNCH_EXTEND_TICKS);
-		}
-		if(this.mcp.timers.hasExpired('PunchLeftExtend')){
-			this.leftArmJoint[0].SetMotorSpeed(-PUNCH_RETRACT_SPEED);
-			this.mcp.timers.set('PunchLeftRetract', PUNCH_RETRACT_TICKS);
-		}
-		if(this.mcp.timers.hasExpired('PunchLeftRetract')){
-			// this.leftArmJoint.SetMotorSpeed(0);
-			// this.leftArmJoint.EnableMotor(false);
-		}
-
-		if(input.virtualButtonIsPressed("punch right")){
-			this.rightArmJoint[0].SetMotorSpeed(PUNCH_EXTEND_SPEED);
-			this.rightArmJoint[0].EnableMotor(true);
-			this.mcp.timers.set('PunchRightExtend', PUNCH_EXTEND_TICKS);
-		}
-		if(this.mcp.timers.hasExpired('PunchRightExtend')){
-			this.rightArmJoint[0].SetMotorSpeed(-PUNCH_RETRACT_SPEED);
-			this.mcp.timers.set('PunchRightRetract', PUNCH_RETRACT_TICKS);
-		}
-		if(this.mcp.timers.hasExpired('PunchRightRetract')){
-			// this.rightArmJoint.SetMotorSpeed(0);
-			// this.rightArmJoint.EnableMotor(false);
+			if(input.virtualButtonIsPressed(pNum + 'punch right')){
+				this.rightArmJoint[i].SetMotorSpeed(PUNCH_EXTEND_SPEED);
+				this.rightArmJoint[i].EnableMotor(true);
+				this.mcp.timers.set(pNum + 'PunchRightExtend', PUNCH_EXTEND_TICKS);
+			}
+			if(this.mcp.timers.hasExpired(pNum + 'PunchRightExtend')){
+				this.rightArmJoint[i].SetMotorSpeed(-PUNCH_RETRACT_SPEED);
+				this.mcp.timers.set(pNum + 'PunchRightRetract', PUNCH_RETRACT_TICKS);
+			}
+			if(this.mcp.timers.hasExpired(pNum + 'PunchRightRetract')){
+				// this.rightArmJoint.SetMotorSpeed(0);
+				// this.rightArmJoint.EnableMotor(false);
+			}
 		}
 
 		
