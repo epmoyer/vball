@@ -165,13 +165,15 @@ var StateGame = FlynnState.extend({
 				width: ROBOT_BODY_WIDTH/RENDER_SCALE,
 				height: ROBOT_BODY_HEIGHT/RENDER_SCALE,
 				color: ROBOT_COLOR,
+				fixedRotation: true,
 			}).body;
 		this.leftArm = new FlynnBody(this.physics, {
-				x: (ROBOT_START_X - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 -.1)/RENDER_SCALE,
+				x: (ROBOT_START_X - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 - 0.1)/RENDER_SCALE,
 				y: ROBOT_START_Y/RENDER_SCALE,
 				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
 				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
 				color: ROBOT_COLOR,
+				// fixedRotation: true,
 			}).body;
 		this.rightArm = new FlynnBody(this.physics, {
 				x: (ROBOT_START_X + ROBOT_BODY_WIDTH/2 + ROBOT_ARM_WIDTH/2 )/RENDER_SCALE,
@@ -179,6 +181,7 @@ var StateGame = FlynnState.extend({
 				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
 				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
 				color: ROBOT_COLOR,
+				// fixedRotation: true,
 			}).body;
 
 
@@ -260,6 +263,7 @@ var StateGame = FlynnState.extend({
 		this.goalsRemaining--;
 		if(this.goalsRemaining === 0){
 			this.gameOver = true;
+			this.ballBody.SetPosition(new b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
 		}
 	},
 
@@ -307,6 +311,10 @@ var StateGame = FlynnState.extend({
 			if (input.virtualButtonIsPressed("dev_reset")){
 				this.resetLevel();
 			}
+		}
+
+		if (this.gameOver && input.virtualButtonIsPressed("UI_enter")){
+			this.mcp.nextState = States.MENU;
 		}
 
 		var angle, force, center, engine_v, center_v, engine_world_v;
