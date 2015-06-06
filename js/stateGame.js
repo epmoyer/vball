@@ -19,8 +19,10 @@ var ROBOT_BODY_HEIGHT = 20;
 var ROBOT_ARM_WIDTH = 10;
 var ROBOT_ARM_HEIGHT = 45;
 var ROBOT_THRUST_IMPULSE = 0.04;
-var ROBOT_ANGULAR_IMPULSE = 1.0;
+var ROBOT_ANGULAR_IMPULSE = 2.0;
 var ROBOT_COLOR = FlynnColors.BLUE;
+var ROBOT_ANGULAR_IMPULSE_LIMIT = 5.0;
+var ROBOT_ROTATE_RATE = 4.5;
 
 var BALL_COLOR = FlynnColors.RED;
 var BALL_RADIUS = 20;
@@ -54,6 +56,7 @@ var StateGame = FlynnState.extend({
 
 		this.goalsRemaining = 3;
 		this.highscore = this.mcp.highscores[0][1];
+		this.rotationDampenPending = false;
 	
 		// this.soundBonus = new Howl({
 		// 	src: ['sounds/Bonus.ogg','sounds/Bonus.mp3'],
@@ -323,13 +326,20 @@ var StateGame = FlynnState.extend({
 		// 	console.log(center_v, engine_v, engine_world_v);
 		// 	this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
 		// }
+		var rotationApplied = false;
 		if(input.virtualButtonIsDown("left")){
 			// engine_v = new Victor(-ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
 			// engine_world_v = engine_v.clone().rotate((angle + Math.PI/2)).add(center_v);
 			// //console.log(center_v, engine_v, engine_world_v);
 			// this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
 			// this.robotBody.ApplyTorque(-force);
-			this.robotBody.ApplyAngularImpulse(-ROBOT_ANGULAR_IMPULSE);
+
+			// if(this.robotBody.GetAngularVelocity() > -ROBOT_ANGULAR_IMPULSE_LIMIT){
+			// 	this.robotBody.ApplyAngularImpulse(-ROBOT_ANGULAR_IMPULSE);
+			// }
+			this.robotBody.SetAngularVelocity(-ROBOT_ROTATE_RATE);
+			this.rotationDampenPending = true;
+			rotationApplied = true;
 		}
 		if(input.virtualButtonIsDown("right")){
 			// engine_v = new Victor(ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
@@ -337,8 +347,25 @@ var StateGame = FlynnState.extend({
 			// //console.log(center_v, engine_v, engine_world_v);
 			// this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, new b2Vec2(engine_world_v.x, engine_world_v.y));
 			// this.robotBody.ApplyTorque(force);
-			this.robotBody.ApplyAngularImpulse(ROBOT_ANGULAR_IMPULSE);
+			
+			// if(this.robotBody.GetAngularVelocity() < ROBOT_ANGULAR_IMPULSE_LIMIT){
+			// 	this.robotBody.ApplyAngularImpulse(ROBOT_ANGULAR_IMPULSE);
+			// }
+			this.robotBody.SetAngularVelocity(ROBOT_ROTATE_RATE);
+			this.rotationDampenPending = true;
+			rotationApplied = true;
 		}
+		if(!rotationApplied && this.rotationDampenPending){
+			this.robotBody.SetAngularVelocity(0);
+			this.leftArm.SetAngularVelocity(0);
+			this.rightArm.SetAngularVelocity(0);
+			var vel = this.robotBody.GetLinearVelocity();
+			this.leftArm.SetLinearVelocity(vel.Copy());
+			this.rightArm.SetLinearVelocity(vel.Copy());
+			this.rotationDampenPending = false;
+			console.log("dampened");
+		}
+
 		if(input.virtualButtonIsDown("thrust")){
 			this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
 		}
