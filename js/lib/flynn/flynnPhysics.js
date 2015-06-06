@@ -9,6 +9,17 @@ var b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
 var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
 var b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
 
+// Add ApplyAngularImpulse to Bod2d
+b2Body.prototype.ApplyAngularImpulse = function (impulse) {
+      if (this.m_type != b2Body.b2_dynamicBody) {
+         return;
+      }
+      if (this.IsAwake() === false) {
+         this.SetAwake(true);
+      }
+      this.m_angularVelocity += impulse;
+};
+
 
 var FlynnPhysics= Class.extend({
 	init: function(ctx, gravity_x, gravity_y, render_scale){
@@ -20,7 +31,7 @@ var FlynnPhysics= Class.extend({
 		this.dtRemaining = 0;
 		this.stepAmount = 1/60;
 
-		this.enableDebugDraw();
+		//this.enableDebugDraw();
 	},
 
 	enableDebugDraw: function() {
@@ -46,7 +57,23 @@ var FlynnPhysics= Class.extend({
 	render: function(ctx){
 		if (this.debugDraw) {
 			this.world.DrawDebugData();
-		}
+		} else{
+            //ctx.clearAll();
+        }
+
+        var obj = this.world.GetBodyList();
+ 
+        this.context.save();
+        //this.context.scale(this.scale, this.scale);
+        while (obj) {
+            var body = obj.GetUserData();
+            if (body) {
+                body.draw(this.context, this.scale);
+            }
+     
+            obj = obj.GetNext();
+        }
+        this.context.restore();
 	}
 });
 
@@ -76,6 +103,7 @@ var FlynnBody = function (physics, details) {
  
  
     details.shape = details.shape || this.defaults.shape;
+    //details.color = details.color || this.defaults.color;
  
     switch (details.shape) {
         case "circle":
@@ -103,9 +131,10 @@ var FlynnBody = function (physics, details) {
  
 FlynnBody.prototype.defaults = {
     shape: "block",
-    width: .4,
-    height:.4,
-    radius: .4
+    width: 0.4,
+    height: 0.4,
+    radius: 0.4,
+    //color: FlynnColors.WHITE,
 };
  
 FlynnBody.prototype.fixtureDefaults = {
@@ -122,5 +151,76 @@ FlynnBody.prototype.definitionDefaults = {
     angularVelocity: 0,
     awake: true,
     bullet: false,
-    fixedRotation: false
+    fixedRotation: false,
+};
+
+FlynnBody.prototype.draw = function (context, scale) {
+    var pos = this.body.GetPosition();
+    var angle = this.body.GetAngle();
+ 
+    // Save the context
+    context.save();
+ 
+    // Translate and rotate
+    context.translate(pos.x * scale, pos.y * scale);
+    context.rotate(angle);
+ 
+ 
+    // Draw the shape outline if the shape has a color
+    if (this.details.color) {
+        context.fillStyle = this.details.color;
+ 
+        switch (this.details.shape) {
+            case "circle":
+                context.vectorStart(this.details.color);
+                var first = true;
+                for(var a=0, stop=Math.PI*2, step = Math.PI*2/6; a<=stop; a += step ){
+                    if(first){
+                        context.vectorMoveTo(Math.cos(a)*this.details.radius*scale, Math.sin(a)*this.details.radius*scale);
+                        first = false;
+                    } else {
+                        context.vectorLineTo(Math.cos(a)*this.details.radius*scale, Math.sin(a)*this.details.radius*scale);
+                    }
+                }
+                context.vectorEnd();
+
+
+                // context.beginPath();
+                // context.arc(0, 0, this.details.radius, 0, Math.PI * 2);
+                // context.fill();
+                break;
+            case "polygon":
+                var points = this.details.points;
+                context.beginPath();
+                context.moveTo(points[0].x, points[0].y);
+                for (var i = 1; i < points.length; i++) {
+                    context.lineTo(points[i].x, points[i].y);
+                }
+                context.fill();
+                break;
+            case "block":
+                context.vectorRect(-this.details.width / 2 * scale, -this.details.height / 2 * scale,
+                this.details.width * scale,
+                this.details.height * scale,
+                this.details.color
+                );
+
+                // context.vectorStart(this.details.color);
+                // context.vectorMoveTo(-this.details.width / 2, -this.details.height / 2);
+                // context.vectorLineTo( this.details.width / 2, -this.details.height / 2);
+                // context.vectorLineTo( this.details.width / 2,  this.details.height / 2);
+                // context.vectorLineTo(-this.details.width / 2,  this.details.height / 2);
+                // context.vectorLineTo(-this.details.width / 2, -this.details.height / 2);
+                // context.vectorEnd();
+
+                // context.fillRect(-this.details.width / 2, -this.details.height / 2,
+                // this.details.width,
+                // this.details.height
+                // );
+                break;
+            default:
+                break;
+        }
+    }
+    context.restore();
 };

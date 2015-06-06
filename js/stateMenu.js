@@ -80,10 +80,10 @@ var StateMenu = FlynnState.extend({
             ctx.vectorText("V-BALL", 10,  x_pos + 3, y_pos +3, null, FlynnColors.MAGENTA);
         }
 
-        ctx.vectorText("VERSION 0.2", 1.5, null, 140, null, FlynnColors.CYAN);
+        ctx.vectorText("VERSION 0.3", 1.5, null, 140, null, FlynnColors.CYAN);
 
         var startText;
-        var controlsText1, controlsText2;
+        var controlsText1='', controlsText2='';
         if (this.mcp.arcadeModeEnabled) {
             startText = "PRESS START";
             controlsText1 = "LEFTMOST WHITE BUTTONS TO ROTATE        FAR RIGHT WHITE BUTTON TO THRUST";
@@ -95,16 +95,16 @@ var StateMenu = FlynnState.extend({
         else {
             if (!this.mcp.browserSupportsTouch) {
                 startText = "PRESS <ENTER> TO START";
-                controlsText1 =
-                    "PUNCH  LEFT:" +
-                    this.mcp.input.getVirtualButtonBoundKeyName("punch left") +
-                    "      PUNCH  RIGHT:" +
-                    this.mcp.input.getVirtualButtonBoundKeyName("punch right");
-                controlsText2 =
-                    "THRUST LEFT:" +
-                    this.mcp.input.getVirtualButtonBoundKeyName("thrust left") +
-                    "      THRUST RIGHT:" +
-                    this.mcp.input.getVirtualButtonBoundKeyName("thrust right");
+                // controlsText1 =
+                //     "PUNCH  LEFT:" +
+                //     this.mcp.input.getVirtualButtonBoundKeyName("punch left") +
+                //     "      PUNCH  RIGHT:" +
+                //     this.mcp.input.getVirtualButtonBoundKeyName("punch right");
+                // controlsText2 =
+                //     "THRUST LEFT:" +
+                //     this.mcp.input.getVirtualButtonBoundKeyName("thrust left") +
+                //     "      THRUST RIGHT:" +
+                //     this.mcp.input.getVirtualButtonBoundKeyName("thrust right");
             }
             else{
                 startText = "PUSH AYWHERE TO START";
