@@ -88,6 +88,24 @@ var FlynnPhysics= Class.extend({
 	}
 });
 
+
+FlynnPhysics.prototype.collision = function () {
+    this.listener = new Box2D.Dynamics.b2ContactListener();
+    this.listener.PostSolve = function (contact, impulse) {
+        var bodyA = contact.GetFixtureA().GetBody().GetUserData(),
+            bodyB = contact.GetFixtureB().GetBody().GetUserData();
+ 
+        if (bodyA.contact) {
+            bodyA.contact(contact, impulse, true);
+        }
+        if (bodyB.contact) {
+            bodyB.contact(contact, impulse, false);
+        }
+ 
+    };
+    this.world.SetContactListener(this.listener);
+};
+
 var FlynnBody = function (physics, details) {
     this.details = details = details || {};
  

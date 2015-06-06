@@ -24,7 +24,7 @@ var ROBOT_COLOR = FlynnColors.BLUE;
 var ROBOT_ANGULAR_IMPULSE_LIMIT = 5.0;
 var ROBOT_ROTATE_RATE = 4.5;
 
-var BALL_COLOR = FlynnColors.RED;
+var BALL_COLOR = FlynnColors.GREEN;
 var BALL_RADIUS = 20;
 
 var WALL_THICKNESS = 10;
@@ -58,10 +58,14 @@ var StateGame = FlynnState.extend({
 		this.highscore = this.mcp.highscores[0][1];
 		this.rotationDampenPending = false;
 	
-		// this.soundBonus = new Howl({
-		// 	src: ['sounds/Bonus.ogg','sounds/Bonus.mp3'],
-		// 	volume: 0.5,
-		// });
+		this.soundBounce = new Howl({
+			src: ['sounds/Blocked.ogg','sounds/Blocked.mp3'],
+			volume: 0.5,
+		});
+		this.soundScore = new Howl({
+			src: ['sounds/Tripple_blip.ogg','sounds/Tripple_blip.mp3'],
+			volume: 0.5,
+		});
 
 		var names = this.mcp.input.getConfigurableVirtualButtonNames();
 		this.controls = [];
@@ -210,14 +214,28 @@ var StateGame = FlynnState.extend({
 		this.rightArmJoint  = this.physics.world.CreateJoint(def);
 
 		// Ball
-		this.ballBody = new FlynnBody(this.physics, {
+		var ball = new FlynnBody(this.physics, {
 				x: this.canvasWidth/2/RENDER_SCALE,
 				y: this.canvasHeight/2/RENDER_SCALE,
 				shape:"circle",
 				color: BALL_COLOR,
 				radius:  BALL_RADIUS/RENDER_SCALE,
 				density: 0.2,
-				}).body;
+				});
+
+		var self = this;
+		ball.contact = function (contact, impulse, first) {
+			var magnitude = Math.sqrt(
+				impulse.normalImpulses[0] * impulse.normalImpulses[0] + impulse.normalImpulses[1] * impulse.normalImpulses[1]);
+
+			console.log('mag:' + magnitude);
+			if (magnitude > 0.020) {
+				self.soundBounce.play();
+			}
+			
+		};
+		this.ballBody = ball.body;
+		this.physics.collision();
 
 
 		// Timers
@@ -265,6 +283,7 @@ var StateGame = FlynnState.extend({
 			this.gameOver = true;
 			this.ballBody.SetPosition(new b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
 		}
+		this.soundScore.play();
 	},
 
 	resetShip: function(){
@@ -365,11 +384,11 @@ var StateGame = FlynnState.extend({
 		}
 		if(!rotationApplied && this.rotationDampenPending){
 			this.robotBody.SetAngularVelocity(0);
-			this.leftArm.SetAngularVelocity(0);
-			this.rightArm.SetAngularVelocity(0);
-			var vel = this.robotBody.GetLinearVelocity();
-			this.leftArm.SetLinearVelocity(vel.Copy());
-			this.rightArm.SetLinearVelocity(vel.Copy());
+			// this.leftArm.SetAngularVelocity(0);
+			// this.rightArm.SetAngularVelocity(0);
+			// var vel = this.robotBody.GetLinearVelocity();
+			// this.leftArm.SetLinearVelocity(vel.Copy());
+			// this.rightArm.SetLinearVelocity(vel.Copy());
 			this.rotationDampenPending = false;
 			console.log("dampened");
 		}
