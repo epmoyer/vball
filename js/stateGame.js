@@ -6,14 +6,14 @@ var GRAVITY_X = 0;
 var GRAVITY_Y = 0.0; //9.8;
 var RENDER_SCALE = 100; // 100 pixels == 1 meter
 
+var PLAYER_COLORS = [FlynnColors.BLUE, FlynnColors.RED];
+
 var PUNCH_EXTEND_SPEED = 8.0;
 var PUNCH_RETRACT_SPEED = 2.0;
 var PUNCH_EXTEND_TICKS = 4;
 var PUNCH_RETRACT_TICKS = 6;
 var PUNCH_MAX_FORCE = 4;
 
-var ROBOT_START_X = 100;
-var ROBOT_START_Y = 320;
 var ROBOT_BODY_WIDTH = 40;
 var ROBOT_BODY_HEIGHT = 20;
 var ROBOT_ARM_WIDTH = 10;
@@ -23,6 +23,8 @@ var ROBOT_ANGULAR_IMPULSE = 2.0;
 var ROBOT_COLOR = FlynnColors.BLUE;
 var ROBOT_ANGULAR_IMPULSE_LIMIT = 5.0;
 var ROBOT_ROTATE_RATE = 4.5;
+var ROBOT_START_X = [90, 1024 - 50 - ROBOT_BODY_WIDTH];
+var ROBOT_START_Y = [390, 390];
 
 var BALL_COLOR = FlynnColors.GREEN;
 var BALL_RADIUS = 20;
@@ -31,9 +33,14 @@ var WALL_THICKNESS = 10;
 var BARRIER_COLOR = null;
 
 var GOAL_SIZE = 100;
-var GOAL_X = 1024 - 140;
-var GOAL_Y = 768/2 - GOAL_SIZE/2;
+var GOAL_X = [
+	1024 - 140,
+	40];
+var GOAL_Y = [
+	768/2 - GOAL_SIZE/2,
+	768/2 - GOAL_SIZE/2];
 var GOAL_COLOR = "#004000";
+var GOAL_COLORS = ['#000060', '#400000'];
 
 var BUMPER_LENGTH = 240;
 var BUMPER_THICKNESS = 10;
@@ -43,12 +50,18 @@ var BUMPER_COLOR = FlynnColors.GRAY;
 var StateGame = FlynnState.extend({
 
 	init: function(mcp) {
+		var i, len;
+
 		this._super(mcp);
 		
 		this.canvasWidth = mcp.canvas.ctx.width;
 		this.canvasHeight = mcp.canvas.ctx.height;
 		this.center_x = this.canvasWidth/2;
 		this.center_y = this.canvasHeight/2;
+
+		this.numGoalsToWin2Player = 3;
+		this.score = [0,0];
+		this.numPlayers = 2;
 
 		this.gameOver = false;
 
@@ -69,7 +82,7 @@ var StateGame = FlynnState.extend({
 
 		var names = this.mcp.input.getConfigurableVirtualButtonNames();
 		this.controls = [];
-		for(var i=0, len=names.length; i<len; i++){
+		for(i=0, len=names.length; i<len; i++){
 			this.controls.push(names[i] + ' : ' + this.mcp.input.getVirtualButtonBoundKeyName(names[i]));
 		}
 
@@ -163,55 +176,68 @@ var StateGame = FlynnState.extend({
 		// 		y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE});
 		// }
 
-		this.robotBody = new FlynnBody(this.physics, {
-				x: ROBOT_START_X/RENDER_SCALE,
-				y: ROBOT_START_Y/RENDER_SCALE,
-				width: ROBOT_BODY_WIDTH/RENDER_SCALE,
-				height: ROBOT_BODY_HEIGHT/RENDER_SCALE,
-				color: ROBOT_COLOR,
-				fixedRotation: true,
-			}).body;
-		this.leftArm = new FlynnBody(this.physics, {
-				x: (ROBOT_START_X - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 - 0.1)/RENDER_SCALE,
-				y: ROBOT_START_Y/RENDER_SCALE,
-				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
-				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
-				color: ROBOT_COLOR,
-				// fixedRotation: true,
-			}).body;
-		this.rightArm = new FlynnBody(this.physics, {
-				x: (ROBOT_START_X + ROBOT_BODY_WIDTH/2 + ROBOT_ARM_WIDTH/2 )/RENDER_SCALE,
-				y: ROBOT_START_Y/RENDER_SCALE,
-				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
-				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
-				color: ROBOT_COLOR,
-				// fixedRotation: true,
-			}).body;
+		this.robotBody = [null, null];
+		this.leftArm = [null, null];
+		this.rightArm = [null, null];
+		this.leftArmJoint =[null, null];
+		this.rightArmJoint = [null, null];
+
+		var player;
+		for(player=0, len=this.numPlayers; player<len; player++){
+			this.robotBody[player] = new FlynnBody(this.physics, {
+					x: ROBOT_START_X[player]/RENDER_SCALE,
+					y: ROBOT_START_Y[player]/RENDER_SCALE,
+					width: ROBOT_BODY_WIDTH/RENDER_SCALE,
+					height: ROBOT_BODY_HEIGHT/RENDER_SCALE,
+					color: PLAYER_COLORS[player],
+					fixedRotation: true,
+				}).body;
+			this.leftArm[player] = new FlynnBody(this.physics, {
+					x: (ROBOT_START_X[player] - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 - 0.1)/RENDER_SCALE,
+					y: ROBOT_START_Y[player]/RENDER_SCALE,
+					width: ROBOT_ARM_WIDTH/RENDER_SCALE,
+					height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
+					color: PLAYER_COLORS[player],
+					// fixedRotation: true,
+				}).body;
+			this.rightArm[player] = new FlynnBody(this.physics, {
+					x: (ROBOT_START_X[player] + ROBOT_BODY_WIDTH/2 + ROBOT_ARM_WIDTH/2 )/RENDER_SCALE,
+					y: ROBOT_START_Y[player]/RENDER_SCALE,
+					width: ROBOT_ARM_WIDTH/RENDER_SCALE,
+					height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
+					color: PLAYER_COLORS[player],
+					// fixedRotation: true,
+				}).body;
 
 
-		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
-		def.Initialize(this.leftArm, this.robotBody,
-			new b2Vec2((ROBOT_START_X-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y/RENDER_SCALE),
-			new b2Vec2(0,1));
-		def.enableLimit = true;
-		def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		def.enableMotor = true;
-        def.maxMotorForce = PUNCH_MAX_FORCE;
-        def.motorSpeed = -PUNCH_RETRACT_SPEED;
-		this.leftArmJoint = this.physics.world.CreateJoint(def);
+			def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
+			def.Initialize(this.leftArm[player], this.robotBody[player],
+				new b2Vec2((ROBOT_START_X[player]-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y[player]/RENDER_SCALE),
+				new b2Vec2(0,1));
+			def.enableLimit = true;
+			def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+			def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+			def.enableMotor = true;
+			def.maxMotorForce = PUNCH_MAX_FORCE;
+			def.motorSpeed = -PUNCH_RETRACT_SPEED;
+			this.leftArmJoint[player] = this.physics.world.CreateJoint(def);
 
-		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
-		def.Initialize(this.rightArm, this.robotBody,
-			new b2Vec2((ROBOT_START_X+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y/RENDER_SCALE),
-			new b2Vec2(0,1));
-		def.enableLimit = true;
-		def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		def.enableMotor = true;
-        def.maxMotorForce = PUNCH_MAX_FORCE;
-        def.motorSpeed = -PUNCH_RETRACT_SPEED;
-		this.rightArmJoint  = this.physics.world.CreateJoint(def);
+			def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
+			def.Initialize(this.rightArm[player], this.robotBody[player],
+				new b2Vec2((ROBOT_START_X[player]+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y[player]/RENDER_SCALE),
+				new b2Vec2(0,1));
+			def.enableLimit = true;
+			def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+			def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
+			def.enableMotor = true;
+			def.maxMotorForce = PUNCH_MAX_FORCE;
+			def.motorSpeed = -PUNCH_RETRACT_SPEED;
+			this.rightArmJoint[player] = this.physics.world.CreateJoint(def);
+
+			this.robotBody[player].setHome();
+			this.leftArm[player].setHome();
+			this.rightArm[player].setHome();
+		}
 
 		// Ball
 		var ball = new FlynnBody(this.physics, {
@@ -247,60 +273,40 @@ var StateGame = FlynnState.extend({
 		this.mcp.timers.add('PunchRightRetract', 0);
 
 		this.ballBody.setHome();
-		this.robotBody.setHome();
-		this.leftArm.setHome();
-		this.rightArm.setHome();
 
 		this.resetLevel();
 	},
 
 	resetLevel: function(){
-		// this.ballBody.SetPosition(new b2Vec2(this.canvasWidth/2/RENDER_SCALE, this.canvasHeight/2/RENDER_SCALE));
-		// this.ballBody.SetAngle(0);
-		// this.ballBody.SetLinearVelocity(new b2Vec2(0,0));
-		// this.ballBody.SetAngularVelocity(0);
-		
-		// this.robotBody.SetPosition(new b2Vec2(200/RENDER_SCALE, 200/RENDER_SCALE));
-		// this.robotBody.SetAngle(0);
-		// this.robotBody.SetLinearVelocity(new b2Vec2(0,0));
-		// this.robotBody.SetAngularVelocity(0);
-		// this.ballBody.GetUserData().resetToHome();
-		// this.robotBody.GetUserData().resetToHome();
+		for(var player=0, len=this.numPlayers; player<len; player++){
+			this.robotBody[player].resetToHome();
+			this.leftArm[player].resetToHome();
+			this.rightArm[player].resetToHome();
+		}
 		this.ballBody.resetToHome();
-		this.robotBody.resetToHome();
-		this.leftArm.resetToHome();
-		this.rightArm.resetToHome();
 	},
 
 
-	scoreGoal: function(){
+	scoreGoal: function(player){
 		// Update highscore if exceeded
-		if (this.gameClock < this.highscore){
-			this.highscore = this.gameClock;
+		// if (this.gameClock < this.highscore){
+		// 	this.highscore = this.gameClock;
+		// }
+		if(this.numPlayers === 1){
+			this.goalsRemaining--;
+			if(this.goalsRemaining === 0){
+				this.gameOver = true;
+				this.ballBody.SetPosition(new b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
+			}
 		}
-		this.goalsRemaining--;
-		if(this.goalsRemaining === 0){
-			this.gameOver = true;
-			this.ballBody.SetPosition(new b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
+		else{
+			this.score[player]++;
+			if(this.score[player] >= this.numGoalsToWin2Player){
+				this.gameOver = true;
+				this.ballBody.SetPosition(new b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
+			}
 		}
 		this.soundScore.play();
-	},
-
-	resetShip: function(){
-		this.ship.world_x = ShipStartX;
-		this.ship.world_y = ShipStartY;
-		this.ship.angle = ShipStartAngle;
-		this.ship.vel.x = 0;
-		this.ship.vel.y = 0;
-		this.ship.visible = true;
-	},
-
-	hideShip: function(){
-		// Hide (but don't kill) the ship.
-		// Used for idle time during level advancement.
-		this.engine_sound.stop();
-		this.engine_is_thrusting = false;
-		this.ship.visible = false;
 	},
 
 	handleInputs: function(input, paceFactor) {
@@ -322,8 +328,11 @@ var StateGame = FlynnState.extend({
 			}
 
 			// Points
-			if (input.virtualButtonIsPressed("dev_add_points")){
-				this.scoreGoal();
+			if (input.virtualButtonIsPressed("dev_add_points_0")){
+				this.scoreGoal(0);
+			}
+			if (input.virtualButtonIsPressed("dev_add_points_1")){
+				this.scoreGoal(1);
 			}
 
 			// Die
@@ -337,9 +346,9 @@ var StateGame = FlynnState.extend({
 		}
 
 		var angle, force, center, engine_v, center_v, engine_world_v;
-		angle = this.robotBody.GetAngle() - Math.PI/2;
+		angle = this.robotBody[0].GetAngle() - Math.PI/2;
 		force = ROBOT_THRUST_IMPULSE;
-		center = this.robotBody.GetWorldCenter();
+		center = this.robotBody[0].GetWorldCenter();
 		center_v = new Victor(center.x, center.y);
 		// if(input.virtualButtonIsDown("thrust left")){
 		// 	engine_v = new Victor(-ROBOT_BODY_WIDTH/2/RENDER_SCALE, ROBOT_BODY_HEIGHT/2/RENDER_SCALE);
@@ -364,7 +373,7 @@ var StateGame = FlynnState.extend({
 			// if(this.robotBody.GetAngularVelocity() > -ROBOT_ANGULAR_IMPULSE_LIMIT){
 			// 	this.robotBody.ApplyAngularImpulse(-ROBOT_ANGULAR_IMPULSE);
 			// }
-			this.robotBody.SetAngularVelocity(-ROBOT_ROTATE_RATE);
+			this.robotBody[0].SetAngularVelocity(-ROBOT_ROTATE_RATE);
 			this.rotationDampenPending = true;
 			rotationApplied = true;
 		}
@@ -378,12 +387,12 @@ var StateGame = FlynnState.extend({
 			// if(this.robotBody.GetAngularVelocity() < ROBOT_ANGULAR_IMPULSE_LIMIT){
 			// 	this.robotBody.ApplyAngularImpulse(ROBOT_ANGULAR_IMPULSE);
 			// }
-			this.robotBody.SetAngularVelocity(ROBOT_ROTATE_RATE);
+			this.robotBody[0].SetAngularVelocity(ROBOT_ROTATE_RATE);
 			this.rotationDampenPending = true;
 			rotationApplied = true;
 		}
 		if(!rotationApplied && this.rotationDampenPending){
-			this.robotBody.SetAngularVelocity(0);
+			this.robotBody[0].SetAngularVelocity(0);
 			// this.leftArm.SetAngularVelocity(0);
 			// this.rightArm.SetAngularVelocity(0);
 			// var vel = this.robotBody.GetLinearVelocity();
@@ -394,16 +403,16 @@ var StateGame = FlynnState.extend({
 		}
 
 		if(input.virtualButtonIsDown("thrust")){
-			this.robotBody.ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
+			this.robotBody[0].ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
 		}
 
 		if(input.virtualButtonIsPressed("punch left")){
-			this.leftArmJoint.SetMotorSpeed(PUNCH_EXTEND_SPEED);
-			this.leftArmJoint.EnableMotor(true);
+			this.leftArmJoint[0].SetMotorSpeed(PUNCH_EXTEND_SPEED);
+			this.leftArmJoint[0].EnableMotor(true);
 			this.mcp.timers.set('PunchLeftExtend', PUNCH_EXTEND_TICKS);
 		}
 		if(this.mcp.timers.hasExpired('PunchLeftExtend')){
-			this.leftArmJoint.SetMotorSpeed(-PUNCH_RETRACT_SPEED);
+			this.leftArmJoint[0].SetMotorSpeed(-PUNCH_RETRACT_SPEED);
 			this.mcp.timers.set('PunchLeftRetract', PUNCH_RETRACT_TICKS);
 		}
 		if(this.mcp.timers.hasExpired('PunchLeftRetract')){
@@ -412,12 +421,12 @@ var StateGame = FlynnState.extend({
 		}
 
 		if(input.virtualButtonIsPressed("punch right")){
-			this.rightArmJoint.SetMotorSpeed(PUNCH_EXTEND_SPEED);
-			this.rightArmJoint.EnableMotor(true);
+			this.rightArmJoint[0].SetMotorSpeed(PUNCH_EXTEND_SPEED);
+			this.rightArmJoint[0].EnableMotor(true);
 			this.mcp.timers.set('PunchRightExtend', PUNCH_EXTEND_TICKS);
 		}
 		if(this.mcp.timers.hasExpired('PunchRightExtend')){
-			this.rightArmJoint.SetMotorSpeed(-PUNCH_RETRACT_SPEED);
+			this.rightArmJoint[0].SetMotorSpeed(-PUNCH_RETRACT_SPEED);
 			this.mcp.timers.set('PunchRightRetract', PUNCH_RETRACT_TICKS);
 		}
 		if(this.mcp.timers.hasExpired('PunchRightRetract')){
@@ -493,13 +502,15 @@ var StateGame = FlynnState.extend({
 		var ball_pos = this.ballBody.GetPosition();
 		var x = ball_pos.x * RENDER_SCALE;
 		var y = ball_pos.y * RENDER_SCALE;
-		if( (x>GOAL_X + BALL_RADIUS) &&
-			(x<GOAL_X + GOAL_SIZE - BALL_RADIUS) &&
-			(y>GOAL_Y + BALL_RADIUS) &&
-			(y<GOAL_Y + GOAL_SIZE - BALL_RADIUS)
-			){
-			this.resetLevel();
-			this.scoreGoal();
+		for(var i=0, len=this.numPlayers; i<len; i++){
+			if( (x>GOAL_X[i] + BALL_RADIUS) &&
+				(x<GOAL_X[i] + GOAL_SIZE - BALL_RADIUS) &&
+				(y>GOAL_Y[i] + BALL_RADIUS) &&
+				(y<GOAL_Y[i] + GOAL_SIZE - BALL_RADIUS)
+				){
+				this.resetLevel();
+				this.scoreGoal(i);
+			}
 		}
 	},
 
@@ -509,26 +520,35 @@ var StateGame = FlynnState.extend({
 		//------------
 		// Text
 		//------------
-		var y = 30;
+		var y = this.canvasHeight - 40;
 		var x = 30;
-		for(var i = 0, len = this.controls.length; i<len; i++){
+		var i, len;
+		for(i = 0, len = this.controls.length; i<len; i++){
 			ctx.vectorText(this.controls[i], 2, x, y, null, FlynnColors.GRAY);
-			y += 20;
+			y -= 20;
 		}
 
-		ctx.vectorText('GOALS REMAIING: ' + this.goalsRemaining, 2, this.canvasWidth-230, 30, null, FlynnColors.YELLOW);
-		var time_in_seconds = (this.gameClock / 60);
-		var hundredths = Math.floor((time_in_seconds - Math.floor(time_in_seconds)) * 100);
-		var minutes = Math.floor(time_in_seconds / 60);
-		var seconds = Math.floor((this.gameClock - (minutes * 60 * 60)) / 60);
-		ctx.vectorText('TIME ' + 
-			flynnZeroPad(minutes,2) + ':' + 
-			flynnZeroPad(seconds,2) + ':' +
-			flynnZeroPad(hundredths,2),
-			2, this.canvasWidth-180, 50, null, FlynnColors.YELLOW);
+		if(this.numPlayers === 1){
+			ctx.vectorText('GOALS REMAIING: ' + this.goalsRemaining, 2, this.canvasWidth-230, 30, null, FlynnColors.YELLOW);
+			var time_in_seconds = (this.gameClock / 60);
+			var hundredths = Math.floor((time_in_seconds - Math.floor(time_in_seconds)) * 100);
+			var minutes = Math.floor(time_in_seconds / 60);
+			var seconds = Math.floor((this.gameClock - (minutes * 60 * 60)) / 60);
+			ctx.vectorText('TIME ' + 
+				flynnZeroPad(minutes,2) + ':' + 
+				flynnZeroPad(seconds,2) + ':' +
+				flynnZeroPad(hundredths,2),
+				2, this.canvasWidth-180, 50, null, FlynnColors.YELLOW);
+		}
+		else{
+			ctx.vectorText(this.score[0], 3, 30, 30, null, PLAYER_COLORS[0]);
+			ctx.vectorText(this.score[1], 3, this.canvasWidth-30, 30, 0, PLAYER_COLORS[1]);
+		}
 
 
-		ctx.vectorRect(GOAL_X, GOAL_Y, GOAL_SIZE, GOAL_SIZE, GOAL_COLOR);
+		for(i=0, len=this.numPlayers; i<len; i++){
+			ctx.vectorRect(GOAL_X[i], GOAL_Y[i], GOAL_SIZE, GOAL_SIZE, GOAL_COLORS[i]);
+		}
 		this.physics.render(ctx);
 
 		ctx.vectorRect(WALL_THICKNESS-1,WALL_THICKNESS-1,this.canvasWidth-WALL_THICKNESS*2+2, this.canvasHeight-WALL_THICKNESS*2+2, FlynnColors.GRAY);

@@ -46,8 +46,9 @@ var Game = Class.extend({
 			this.input.addVirtualButton('dev_metrics', FlynnKeyboardMap['6'], FlynnNotConfigurable);
 			this.input.addVirtualButton('dev_slow_mo', FlynnKeyboardMap['7'], FlynnNotConfigurable);
 			this.input.addVirtualButton('dev_fps_20', FlynnKeyboardMap['\\'], FlynnNotConfigurable);
-			this.input.addVirtualButton('dev_add_points', FlynnKeyboardMap['8'], FlynnNotConfigurable);
-			this.input.addVirtualButton('dev_reset', FlynnKeyboardMap['9'], FlynnNotConfigurable);
+			this.input.addVirtualButton('dev_add_points_0', FlynnKeyboardMap['8'], FlynnNotConfigurable);
+			this.input.addVirtualButton('dev_add_points_1', FlynnKeyboardMap['9'], FlynnNotConfigurable);
+			this.input.addVirtualButton('dev_reset', FlynnKeyboardMap['0'], FlynnNotConfigurable);
 		}
 		if(this.mcp.arcadeModeEnabled){
 			this.input.addVirtualButton('quarter', FlynnKeyboardMap['5'], FlynnConfigurable);
