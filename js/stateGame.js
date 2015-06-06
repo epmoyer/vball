@@ -12,6 +12,8 @@ var PUNCH_EXTEND_TICKS = 4;
 var PUNCH_RETRACT_TICKS = 6;
 var PUNCH_MAX_FORCE = 4;
 
+var ROBOT_START_X = 100;
+var ROBOT_START_Y = 320;
 var ROBOT_BODY_WIDTH = 40;
 var ROBOT_BODY_HEIGHT = 20;
 var ROBOT_ARM_WIDTH = 10;
@@ -21,9 +23,20 @@ var ROBOT_ANGULAR_IMPULSE = 1.0;
 var ROBOT_COLOR = FlynnColors.BLUE;
 
 var BALL_COLOR = FlynnColors.RED;
+var BALL_RADIUS = 20;
 
 var WALL_THICKNESS = 10;
 var BARRIER_COLOR = null;
+
+var GOAL_SIZE = 100;
+var GOAL_X = 1024 - 140;
+var GOAL_Y = 768/2 - GOAL_SIZE/2;
+var GOAL_COLOR = "#004000";
+
+var BUMPER_LENGTH = 240;
+var BUMPER_THICKNESS = 10;
+var BUMPER_MARGIN = 190;
+var BUMPER_COLOR = FlynnColors.GRAY;
 
 var StateGame = FlynnState.extend({
 
@@ -35,22 +48,11 @@ var StateGame = FlynnState.extend({
 		this.center_x = this.canvasWidth/2;
 		this.center_y = this.canvasHeight/2;
 
-		// this.ship = new Ship(Points.LANDER, 2.5,
-		// 	ShipStartX,
-		// 	ShipStartY,
-		// 	ShipStartAngle, FlynnColors.YELLOW);
-
-		// this.ship.visible = true;
-
 		this.gameOver = false;
-		this.lives = 3;
-		// this.lifepolygon = new FlynnPolygon(Points.LANDER, FlynnColors.YELLOW);
-		// this.lifepolygon.setScale(1.2);
-		// this.lifepolygon.setAngle(0);
 
         this.viewport_v = new Victor(0,0);
 
-		this.score = 0;
+		this.goalsRemaining = 3;
 		this.highscore = this.mcp.highscores[0][1];
 	
 		// this.soundBonus = new Howl({
@@ -69,9 +71,10 @@ var StateGame = FlynnState.extend({
 
 		this.physics = new FlynnPhysics(mcp.canvas.ctx, GRAVITY_X, GRAVITY_Y, RENDER_SCALE);
 
-		// Create some walls
-	
-		// Left wall
+		//-------------------
+		// Playfield Barriers
+		//-------------------
+		// Left Barrier
 		new FlynnBody(this.physics, { type: "static",
 			x: (WALL_THICKNESS/2)/RENDER_SCALE,
 			y: this.canvasHeight/2/RENDER_SCALE,
@@ -79,7 +82,7 @@ var StateGame = FlynnState.extend({
 			width: WALL_THICKNESS/RENDER_SCALE,
 			color: BARRIER_COLOR,
 			});
-		// Right wall
+		// Right Barrier
 		new FlynnBody(this.physics, { type: "static",
 			x: (this.canvasWidth-WALL_THICKNESS/2)/RENDER_SCALE,
 			y: this.canvasHeight/2/RENDER_SCALE,
@@ -87,7 +90,7 @@ var StateGame = FlynnState.extend({
 			width: WALL_THICKNESS/RENDER_SCALE,
 			color: BARRIER_COLOR,
 			});
-		// Top Wall
+		// Top Barrier
 		new FlynnBody(this.physics, { type: "static",
 			x: this.canvasWidth/2/RENDER_SCALE,
 			y: WALL_THICKNESS/2/RENDER_SCALE,
@@ -95,7 +98,7 @@ var StateGame = FlynnState.extend({
 			width: (this.canvasWidth-2*WALL_THICKNESS)/RENDER_SCALE,
 			color: BARRIER_COLOR,
 			});
-		// Bottom Wall
+		// Bottom Barrier
 		new FlynnBody(this.physics, { type: "static",
 			x: this.canvasWidth/2/RENDER_SCALE,
 			y: (this.canvasHeight-WALL_THICKNESS/2)/RENDER_SCALE,
@@ -103,35 +106,73 @@ var StateGame = FlynnState.extend({
 			width: (this.canvasWidth-2*WALL_THICKNESS)/RENDER_SCALE,
 			color: BARRIER_COLOR,
 			});
+	
 		
 
-		var SPAWN_MARGIN = 50;
-		for(var i = 0; i<0; i++){
-			new FlynnBody(this.physics, {
-				x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
-				y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE, shape:"circle" });
-			new FlynnBody(this.physics, {
-				x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
-				y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE});
-		}
+		//--------------
+		// Bumpers
+		//--------------
+		// Left Bumper
+		new FlynnBody(this.physics, { type: "static",
+			x: (BUMPER_MARGIN + BUMPER_THICKNESS/2)/RENDER_SCALE,
+			y: this.canvasHeight/2/RENDER_SCALE,
+			height: BUMPER_LENGTH/RENDER_SCALE,
+			width: BUMPER_THICKNESS/RENDER_SCALE,
+			color: BUMPER_COLOR,
+			});
+		// // Right Bumper
+		new FlynnBody(this.physics, { type: "static",
+			x: (this.canvasWidth - BUMPER_MARGIN - BUMPER_THICKNESS/2)/RENDER_SCALE,
+			y: this.canvasHeight/2/RENDER_SCALE,
+			height: BUMPER_LENGTH/RENDER_SCALE,
+			width: BUMPER_THICKNESS/RENDER_SCALE,
+			color: BUMPER_COLOR,
+			});
+		// // Top Bumper
+		new FlynnBody(this.physics, { type: "static",
+			x: this.canvasWidth/2/RENDER_SCALE,
+			y: (BUMPER_MARGIN + BUMPER_THICKNESS/2)/RENDER_SCALE,
+			height: BUMPER_THICKNESS/RENDER_SCALE,
+			width: BUMPER_LENGTH/RENDER_SCALE,
+			color: BUMPER_COLOR,
+			});
+		// // Bottom Bumper
+		new FlynnBody(this.physics, { type: "static",
+			x: this.canvasWidth/2/RENDER_SCALE,
+			y: (this.canvasHeight - BUMPER_MARGIN - BUMPER_THICKNESS/2)/RENDER_SCALE,
+			height: BUMPER_THICKNESS/RENDER_SCALE,
+			width: BUMPER_LENGTH/RENDER_SCALE,
+			color: BUMPER_COLOR,
+			});
+		
+
+		//var SPAWN_MARGIN = 50;
+		// for(var i = 0; i<0; i++){
+		// 	new FlynnBody(this.physics, {
+		// 		x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
+		// 		y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE, shape:"circle" });
+		// 	new FlynnBody(this.physics, {
+		// 		x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
+		// 		y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE});
+		// }
 
 		this.robotBody = new FlynnBody(this.physics, {
-				x: 200/RENDER_SCALE,
-				y: 200/RENDER_SCALE,
+				x: ROBOT_START_X/RENDER_SCALE,
+				y: ROBOT_START_Y/RENDER_SCALE,
 				width: ROBOT_BODY_WIDTH/RENDER_SCALE,
 				height: ROBOT_BODY_HEIGHT/RENDER_SCALE,
 				color: ROBOT_COLOR,
 			}).body;
-		leftArm = new FlynnBody(this.physics, {
-				x: (200 - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 -.1)/RENDER_SCALE,
-				y: 200/RENDER_SCALE,
+		this.leftArm = new FlynnBody(this.physics, {
+				x: (ROBOT_START_X - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 -.1)/RENDER_SCALE,
+				y: ROBOT_START_Y/RENDER_SCALE,
 				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
 				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
 				color: ROBOT_COLOR,
 			}).body;
-		rightArm = new FlynnBody(this.physics, {
-				x: (200 + ROBOT_BODY_WIDTH/2 + ROBOT_ARM_WIDTH/2 )/RENDER_SCALE,
-				y: 200/RENDER_SCALE,
+		this.rightArm = new FlynnBody(this.physics, {
+				x: (ROBOT_START_X + ROBOT_BODY_WIDTH/2 + ROBOT_ARM_WIDTH/2 )/RENDER_SCALE,
+				y: ROBOT_START_Y/RENDER_SCALE,
 				width: ROBOT_ARM_WIDTH/RENDER_SCALE,
 				height: ROBOT_ARM_HEIGHT/RENDER_SCALE,
 				color: ROBOT_COLOR,
@@ -139,23 +180,20 @@ var StateGame = FlynnState.extend({
 
 
 		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
-		def.Initialize(leftArm, this.robotBody,
-			new b2Vec2((200-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE),
+		def.Initialize(this.leftArm, this.robotBody,
+			new b2Vec2((ROBOT_START_X-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y/RENDER_SCALE),
 			new b2Vec2(0,1));
 		def.enableLimit = true;
-		// def.lowerTranslation = -(ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
-		// def.upperTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;		
 		def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
 		def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
 		def.enableMotor = true;
         def.maxMotorForce = PUNCH_MAX_FORCE;
         def.motorSpeed = -PUNCH_RETRACT_SPEED;
 		this.leftArmJoint = this.physics.world.CreateJoint(def);
-		//this.leftArmJoint.EnableMotor(true);
 
 		def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
-		def.Initialize(rightArm, this.robotBody,
-			new b2Vec2((200+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, 200/RENDER_SCALE),
+		def.Initialize(this.rightArm, this.robotBody,
+			new b2Vec2((ROBOT_START_X+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y/RENDER_SCALE),
 			new b2Vec2(0,1));
 		def.enableLimit = true;
 		def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
@@ -166,14 +204,15 @@ var StateGame = FlynnState.extend({
 		this.rightArmJoint  = this.physics.world.CreateJoint(def);
 
 		// Ball
-		new FlynnBody(this.physics, {
+		this.ballBody = new FlynnBody(this.physics, {
 				x: this.canvasWidth/2/RENDER_SCALE,
 				y: this.canvasHeight/2/RENDER_SCALE,
 				shape:"circle",
 				color: BALL_COLOR,
-				radius:  0.2,
+				radius:  BALL_RADIUS/RENDER_SCALE,
 				density: 0.2,
-				});
+				}).body;
+
 
 		// Timers
 		//this.mcp.timers.add('shipRespawnDelay', ShipRespawnDelayGameStartTicks, null);  // Start game with a delay (for start sound to finish)
@@ -182,24 +221,42 @@ var StateGame = FlynnState.extend({
 		this.mcp.timers.add('PunchLeftRetract', 0);
 		this.mcp.timers.add('PunchRightExtend', 0);
 		this.mcp.timers.add('PunchRightRetract', 0);
+
+		this.ballBody.setHome();
+		this.robotBody.setHome();
+		this.leftArm.setHome();
+		this.rightArm.setHome();
+
+		this.resetLevel();
+	},
+
+	resetLevel: function(){
+		// this.ballBody.SetPosition(new b2Vec2(this.canvasWidth/2/RENDER_SCALE, this.canvasHeight/2/RENDER_SCALE));
+		// this.ballBody.SetAngle(0);
+		// this.ballBody.SetLinearVelocity(new b2Vec2(0,0));
+		// this.ballBody.SetAngularVelocity(0);
+		
+		// this.robotBody.SetPosition(new b2Vec2(200/RENDER_SCALE, 200/RENDER_SCALE));
+		// this.robotBody.SetAngle(0);
+		// this.robotBody.SetLinearVelocity(new b2Vec2(0,0));
+		// this.robotBody.SetAngularVelocity(0);
+		// this.ballBody.GetUserData().resetToHome();
+		// this.robotBody.GetUserData().resetToHome();
+		this.ballBody.resetToHome();
+		this.robotBody.resetToHome();
+		this.leftArm.resetToHome();
+		this.rightArm.resetToHome();
 	},
 
 
-	addPoints: function(points, unconditional){
-		// Points only count when not visible, unless unconditional
-		// Unconditional is used for bonuses,etc. Which may be applied when not visible.
-		if(this.ship.visible || unconditional){
-			if(Math.floor(this.score / ExtraLifeScore) !== Math.floor((this.score + points) / ExtraLifeScore)){
-				// Extra life
-				this.lives++;
-				this.soundExtraLife.play();
-			}
-			this.score += points;
-		}
-
+	scoreGoal: function(){
 		// Update highscore if exceeded
-		if (this.score > this.highscore){
-			this.highscore = this.score;
+		if (this.gameClock < this.highscore){
+			this.highscore = this.gameClock;
+		}
+		this.goalsRemaining--;
+		if(this.goalsRemaining === 0){
+			this.gameOver = true;
 		}
 	},
 
@@ -218,49 +275,6 @@ var StateGame = FlynnState.extend({
 		this.engine_sound.stop();
 		this.engine_is_thrusting = false;
 		this.ship.visible = false;
-	},
-
-	doShipDie: function(){
-		// Visibility
-		this.ship.visible = false;
-
-		// Lives
-		this.lives--;
-		if(this.lives <= 0){
-			this.gameOver = true;
-			// this.mcp.timers.set('levelCompleteMessage', 0);
-			// this.mcp.timers.set('levelBonusDelay', 0);
-			// this.mcp.timers.set('levelBonus', 0);
-
-		}
-
-		// Sounds
-		//this.engine_sound.stop();
-		//this.soundPlayerDie.play();
-
-		// Explosion
-		// this.particles.explosion(
-		// 	this.ship.world_x,
-		// 	this.ship.world_y,
-		// 	this.ship.vel.x,
-		// 	this.ship.vel.y,
-		// 	ShipNumExplosionParticles,
-		// 	ShipExplosionMaxVelocity,
-		// 	FlynnColors.YELLOW,
-		// 	ParticleTypes.PLAIN);
-		// this.particles.explosion(
-		// 	this.ship.world_x,
-		// 	this.ship.world_y,
-		// 	this.ship.vel.x,
-		// 	this.ship.vel.y,
-		// 	ShipNumExplosionParticles / 2,
-		// 	ShipExplosionMaxVelocity,
-		// 	FlynnColors.YELLOW,
-		// 	ParticleTypes.EXHAUST);
-		
-		// // Timers
-		// this.mcp.timers.set('shipRespawnDelay', ShipRespawnDelayTicks);
-		// this.mcp.timers.set('shipRespawnAnimation', 0); // Set to zero to deactivate it
 	},
 
 	handleInputs: function(input, paceFactor) {
@@ -283,12 +297,12 @@ var StateGame = FlynnState.extend({
 
 			// Points
 			if (input.virtualButtonIsPressed("dev_add_points")){
-				this.addPoints(100);
+				this.scoreGoal();
 			}
 
 			// Die
-			if (input.virtualButtonIsPressed("dev_die") && this.ship.visible){
-				this.doShipDie();
+			if (input.virtualButtonIsPressed("dev_reset")){
+				this.resetLevel();
 			}
 		}
 
@@ -417,8 +431,22 @@ var StateGame = FlynnState.extend({
 	},
 
 	update: function(paceFactor) {
-		this.gameClock += paceFactor;
+		if(!this.gameOver){
+			this.gameClock += paceFactor;
+		}
 		this.physics.update(paceFactor);
+
+		var ball_pos = this.ballBody.GetPosition();
+		var x = ball_pos.x * RENDER_SCALE;
+		var y = ball_pos.y * RENDER_SCALE;
+		if( (x>GOAL_X + BALL_RADIUS) &&
+			(x<GOAL_X + GOAL_SIZE - BALL_RADIUS) &&
+			(y>GOAL_Y + BALL_RADIUS) &&
+			(y<GOAL_Y + GOAL_SIZE - BALL_RADIUS)
+			){
+			this.resetLevel();
+			this.scoreGoal();
+		}
 	},
 
 	render: function(ctx){
@@ -434,14 +462,27 @@ var StateGame = FlynnState.extend({
 			y += 20;
 		}
 
+		ctx.vectorText('GOALS REMAIING: ' + this.goalsRemaining, 2, this.canvasWidth-230, 30, null, FlynnColors.YELLOW);
+		var time_in_seconds = (this.gameClock / 60);
+		var hundredths = Math.floor((time_in_seconds - Math.floor(time_in_seconds)) * 100);
+		var minutes = Math.floor(time_in_seconds / 60);
+		var seconds = Math.floor((this.gameClock - (minutes * 60 * 60)) / 60);
+		ctx.vectorText('TIME ' + 
+			flynnZeroPad(minutes,2) + ':' + 
+			flynnZeroPad(seconds,2) + ':' +
+			flynnZeroPad(hundredths,2),
+			2, this.canvasWidth-180, 50, null, FlynnColors.YELLOW);
+
+
+		ctx.vectorRect(GOAL_X, GOAL_Y, GOAL_SIZE, GOAL_SIZE, GOAL_COLOR);
 		this.physics.render(ctx);
 
 		ctx.vectorRect(WALL_THICKNESS-1,WALL_THICKNESS-1,this.canvasWidth-WALL_THICKNESS*2+2, this.canvasHeight-WALL_THICKNESS*2+2, FlynnColors.GRAY);
 
 		// Game Over
 		if(this.gameOver){
-			ctx.vectorText("GAME OVER", 6, null, 200, null, FlynnColors.CYAN);
-			ctx.vectorText("PRESS <ENTER>", 2, null, 250, null, FlynnColors.CYAN);
+			ctx.vectorText("GAME OVER", 6, null, 230, null, FlynnColors.YELLOW);
+			ctx.vectorText("PRESS <ENTER>", 2, null, 280, null, FlynnColors.YELLOW);
 		}
 	}
 });

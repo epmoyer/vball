@@ -108,3 +108,8 @@ function flynnInterceptSolution(B_v, u_v, A_v, gun_velocity){
 
     return solution;
 }
+
+function flynnZeroPad(num, places) {
+    var zero = places - num.toString().length + 1;
+    return Array(+(zero > 0 && zero)).join("0") + num;
+}

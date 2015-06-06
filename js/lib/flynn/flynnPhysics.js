@@ -20,6 +20,17 @@ b2Body.prototype.ApplyAngularImpulse = function (impulse) {
       this.m_angularVelocity += impulse;
 };
 
+b2Body.prototype.setHome = function () {
+    var pos = this.GetPosition();
+    this.home_pos = new b2Vec2(pos.x, pos.y);
+};
+
+b2Body.prototype.resetToHome = function () {
+    this.SetPosition(this.home_pos);
+    this.SetAngle(0);
+    this.SetLinearVelocity(new b2Vec2(0,0));
+    this.SetAngularVelocity(0);
+};
 
 var FlynnPhysics= Class.extend({
 	init: function(ctx, gravity_x, gravity_y, render_scale){
@@ -153,6 +164,13 @@ FlynnBody.prototype.definitionDefaults = {
     bullet: false,
     fixedRotation: false,
 };
+
+// FlynnBody.prototype.resetToHome = function(){
+//     this.SetPosition(new b2Vec2(this.details.x, this.details.y));
+//     this.SetAngle(0);
+//     this.SetLinearVelocity(new b2Vec2(0,0));
+//     this.SetAngularVelocity(0);
+// };
 
 FlynnBody.prototype.draw = function (context, scale) {
     var pos = this.body.GetPosition();
