@@ -18,7 +18,7 @@ var ROBOT_BODY_WIDTH = 40;
 var ROBOT_BODY_HEIGHT = 20;
 var ROBOT_ARM_WIDTH = 10;
 var ROBOT_ARM_HEIGHT = 45;
-var ROBOT_THRUST_IMPULSE = 0.04;
+var ROBOT_THRUST_IMPULSE = 0.06;
 var ROBOT_ANGULAR_IMPULSE = 2.0;
 var ROBOT_COLOR = FlynnColors.BLUE;
 var ROBOT_ANGULAR_IMPULSE_LIMIT = 5.0;
@@ -47,6 +47,8 @@ var BUMPER_THICKNESS = 10;
 var BUMPER_MARGIN = 190;
 var BUMPER_COLOR = FlynnColors.GRAY;
 
+var BOUNCE_LOCKOUT_TICKS = 15;
+
 var StateGame = FlynnState.extend({
 
 	init: function(mcp) {
@@ -61,7 +63,7 @@ var StateGame = FlynnState.extend({
 
 		this.numGoalsToWin2Player = 3;
 		this.score = [0,0];
-		this.numPlayers = 2;
+		this.numPlayers = mcp.numPlayers;
 
 		this.gameOver = false;
 
@@ -70,6 +72,7 @@ var StateGame = FlynnState.extend({
 		this.goalsRemaining = 3;
 		this.highscore = this.mcp.highscores[0][1];
 		this.rotationDampenPending = [false, false];
+		this.thrusting = [false, false];
 	
 		this.soundBounce = new Howl({
 			src: ['sounds/Blocked.ogg','sounds/Blocked.mp3'],
@@ -78,6 +81,11 @@ var StateGame = FlynnState.extend({
 		this.soundScore = new Howl({
 			src: ['sounds/Tripple_blip.ogg','sounds/Tripple_blip.mp3'],
 			volume: 0.5,
+		});
+		this.soundThrust = new Howl({
+			src: ['sounds/Engine.ogg','sounds/Engine.mp3'],
+			volume: 0.5,
+			loop: true,
 		});
 
 		var names = this.mcp.input.getConfigurableVirtualButtonNames();
@@ -254,9 +262,9 @@ var StateGame = FlynnState.extend({
 			var magnitude = Math.sqrt(
 				impulse.normalImpulses[0] * impulse.normalImpulses[0] + impulse.normalImpulses[1] * impulse.normalImpulses[1]);
 
-			console.log('mag:' + magnitude);
-			if (magnitude > 0.020) {
+			if (magnitude > 0.020 && !self.mcp.timers.isRunning('bounceLockout')){
 				self.soundBounce.play();
+				self.mcp.timers.set('bounceLockout', BOUNCE_LOCKOUT_TICKS);
 			}
 			
 		};
@@ -275,6 +283,7 @@ var StateGame = FlynnState.extend({
 		this.mcp.timers.add('P2 PunchLeftRetract', 0);
 		this.mcp.timers.add('P2 PunchRightExtend', 0);
 		this.mcp.timers.add('P2 PunchRightRetract', 0);
+		this.mcp.timers.add('bounceLockout', 0);
 
 		this.ballBody.setHome();
 
@@ -347,6 +356,7 @@ var StateGame = FlynnState.extend({
 
 		if (this.gameOver && input.virtualButtonIsPressed("UI_enter")){
 			this.mcp.nextState = States.MENU;
+			this.soundThrust.stop();
 		}
 
 		var angle, force, center, engine_v, center_v, engine_world_v, i, len;
@@ -375,6 +385,15 @@ var StateGame = FlynnState.extend({
 
 			if(input.virtualButtonIsDown(pNum + 'thrust')){
 				this.robotBody[i].ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
+				if(!this.thrusting[0] && !this.thrusting[1]){
+					this.thrusting[i]=true;
+					this.soundThrust.play();
+				}
+			} else{
+				this.thrusting[i]=false;
+				if(!this.thrusting[0] && !this.thrusting[1]){
+					this.soundThrust.stop();
+				}
 			}
 
 			if(input.virtualButtonIsPressed(pNum + 'punch left')){
@@ -495,10 +514,10 @@ var StateGame = FlynnState.extend({
 		var y = this.canvasHeight - 40;
 		var x = 30;
 		var i, len;
-		for(i = 0, len = this.controls.length; i<len; i++){
-			ctx.vectorText(this.controls[i], 2, x, y, null, FlynnColors.GRAY);
-			y -= 20;
-		}
+		// for(i = 0, len = this.controls.length; i<len; i++){
+		// 	ctx.vectorText(this.controls[i], 2, x, y, null, FlynnColors.GRAY);
+		// 	y -= 20;
+		// }
 
 		if(this.numPlayers === 1){
 			ctx.vectorText('GOALS REMAIING: ' + this.goalsRemaining, 2, this.canvasWidth-230, 30, null, FlynnColors.YELLOW);

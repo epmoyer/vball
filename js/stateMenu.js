@@ -51,8 +51,17 @@ var StateMenu = FlynnState.extend({
         {
             this.mcp.credits -= 1;
 			this.mcp.nextState = States.GAME;
+            this.mcp.numPlayers = 1;
 			this.start_sound.play();
 		}
+        if (  ( !this.mcp.arcadeModeEnabled && input.virtualButtonIsPressed("UI_enter")) ||
+            ( this.mcp.arcadeModeEnabled && (this.mcp.credits > 1) && input.virtualButtonIsPressed("start_2")))
+        {
+            this.mcp.credits -= 2;
+            this.mcp.nextState = States.GAME;
+            this.mcp.numPlayers = 2;
+            this.start_sound.play();
+        }
 
         if (input.virtualButtonIsPressed("UI_escape")) {
             this.mcp.nextState = States.CONFIG;
@@ -121,13 +130,33 @@ var StateMenu = FlynnState.extend({
         //         this.mcp.custom.shootPrompt = "TAP RIGHT TO SHOOT";
         //     }
         // }
-        ctx.vectorText(controlsText1, 2, null, 280, null, FlynnColors.YELLOW);
-        ctx.vectorText(controlsText2, 2, null, 300, null, FlynnColors.YELLOW);
+
+        // ctx.vectorText(controlsText1, 2, null, 280, null, FlynnColors.YELLOW);
+        // ctx.vectorText(controlsText2, 2, null, 300, null, FlynnColors.YELLOW);
         if(!this.mcp.arcadeModeEnabled || (this.mcp.arcadeModeEnabled && (this.mcp.credits > 0))) {
             if (Math.floor(this.mcp.clock / 40) % 2 == 1) {
-                ctx.vectorText(startText, 2, null, 380, null, FlynnColors.GREEN);
+                ctx.vectorText(startText, 2, null, 400, null, FlynnColors.GREEN);
             }
         }
+        var y = 180;
+        var x = this.canvasWidth/2 + 50;
+        var i, len;
+        var names = this.mcp.input.getConfigurableVirtualButtonNames();
+        //this.controls = [];
+        // for(i=0, len=names.length; i<len; i++){
+        //     this.controls.push(names[i] + ' : ' + this.mcp.input.getVirtualButtonBoundKeyName(names[i]));
+        // }
+        // for(i = 0, len = this.controls.length; i<len; i++){
+        //     ctx.vectorText(this.controls[i], 2, x, y, null, FlynnColors.YELLOW);
+        //     y += 20;
+        // }
+
+        for(i = 0, len = names.length; i<len; i++){
+            ctx.vectorText(names[i]+":", 2, x, y, -1, FlynnColors.YELLOW);
+            ctx.vectorText(this.mcp.input.getVirtualButtonBoundKeyName(names[i]), 2, x, y, null, FlynnColors.YELLOW);
+            y += 20;
+        }
+
 
         ctx.vectorText("PUT THE BALL IN THE THING!", 3, null, 500, null, FlynnColors.CYAN);
         ctx.vectorText("A BOX2D THRUST/PUCH TECH DEMO", 1.5, null, 530, null, FlynnColors.CYAN);
