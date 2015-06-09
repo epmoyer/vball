@@ -231,6 +231,9 @@ var FlynnMcp = Class.extend({
 			if(!skipThisFrame){
 				// Change state (if pending)
 				if (self.nextState !== self.noChangeState) {
+					if(self.currentState && self.currentState.destructor){
+						self.currentState.destructor();
+					}
 					self.currentState = self.stateBuilderFunc(self.nextState);
 					self.nextState = self.noChangeState;
 				}

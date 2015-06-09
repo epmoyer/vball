@@ -290,6 +290,10 @@ var StateGame = FlynnState.extend({
 		this.resetLevel();
 	},
 
+	destructor: function(){
+		this.soundThrust.stop();
+	},
+
 	resetLevel: function(){
 		for(var player=0, len=this.numPlayers; player<len; player++){
 			this.robotBody[player].resetToHome();
