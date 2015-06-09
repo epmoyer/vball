@@ -125,12 +125,11 @@ var Game = Class.extend({
 
 	resetScores: function(){
 		this.mcp.highscores = [
-			["FIENDFODDER", 2000],
-			["ROCKEM", 1300],
-			["SOCKEM", 1200],
-			["BECKAM", 1100],
-			["TURNER", 600],
-			["ORTEGA", 500],
+			["FIENDFODDER", 120*60],
+			["ROCKEM", 128*60],
+			["SOCKEM", 130*60],
+			["BECKAM", 160*60],
+			["ALI", 170*60],
 		];
 		this.mcp.custom.score = 0;
 	},

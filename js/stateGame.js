@@ -515,31 +515,15 @@ var StateGame = FlynnState.extend({
 		//------------
 		// Text
 		//------------
-		var y = this.canvasHeight - 40;
-		var x = 30;
-		var i, len;
-		// for(i = 0, len = this.controls.length; i<len; i++){
-		// 	ctx.vectorText(this.controls[i], 2, x, y, null, FlynnColors.GRAY);
-		// 	y -= 20;
-		// }
-
 		if(this.numPlayers === 1){
 			ctx.vectorText('GOALS REMAIING: ' + this.goalsRemaining, 2, this.canvasWidth-230, 30, null, FlynnColors.YELLOW);
-			var time_in_seconds = (this.gameClock / 60);
-			var hundredths = Math.floor((time_in_seconds - Math.floor(time_in_seconds)) * 100);
-			var minutes = Math.floor(time_in_seconds / 60);
-			var seconds = Math.floor((this.gameClock - (minutes * 60 * 60)) / 60);
-			ctx.vectorText('TIME ' + 
-				flynnZeroPad(minutes,2) + ':' + 
-				flynnZeroPad(seconds,2) + ':' +
-				flynnZeroPad(hundredths,2),
+			ctx.vectorText('TIME ' + flynnTicksToTime(this.gameClock),
 				2, this.canvasWidth-180, 50, null, FlynnColors.YELLOW);
 		}
 		else{
 			ctx.vectorText(this.score[0], 3, 30, 30, null, PLAYER_COLORS[0]);
 			ctx.vectorText(this.score[1], 3, this.canvasWidth-30, 30, 0, PLAYER_COLORS[1]);
 		}
-
 
 		for(i=0, len=this.numPlayers; i<len; i++){
 			ctx.vectorRect(GOAL_X[i], GOAL_Y[i], GOAL_SIZE, GOAL_SIZE, GOAL_COLORS[i]);
