@@ -30,6 +30,11 @@ var FlynnLeaderboard = Class.extend({
 				if(attributeValue){
 					leaderItem[attributeName] = attributeValue;
 				} else{
+					// Stop loading if an entry does not exist.
+					done = true;
+				}
+				if(attributeIndex === this.maxItems-1){
+					// Don't attempt to load more than the max leaderbaord item limit.
 					done = true;
 				}
 			}
@@ -44,6 +49,8 @@ var FlynnLeaderboard = Class.extend({
 			// No items found in cookies, so use the defaults.
 			this.leaderList = this.defaultLeaderList;
 		}
+
+		this.sortAndTruncate();
 	},
 
 	saveToCookies: function(){
@@ -63,6 +70,7 @@ var FlynnLeaderboard = Class.extend({
 	add: function(newEntry){
 		this.leaderList.push(newEntry);
 		this.sortAndTruncate();
+		this.saveToCookies();
 	},
 
 	getBestEntry: function(){
@@ -75,25 +83,27 @@ var FlynnLeaderboard = Class.extend({
 
 	sortAndTruncate: function(){
 		// sort hiscore in ascending order
+		var self = this;
 		if (this.sortDescending){
 			this.leaderList.sort(function(a, b) {
-				return b[this.primaryAttribute] - a[this.primaryAttribute];
+				return b[self.primaryAttribute] - a[self.primaryAttribute];
 			});
 		} else {
 			this.leaderList.sort(function(a, b) {
-				return a[this.primaryAttribute] - b[this.primaryAttribute];
+				return a[self.primaryAttribute] - b[self.primaryAttribute];
 			});
 		}
 
 		// Drop the last
-		var extraItems = this.maxItems - this.leaderList.length;
+		var extraItems = this.leaderList.length - this.maxItems;
 		if(extraItems > 0){
-			this.leaderList.splice(this.highscores.length - extraItems, extraItems);
+			this.leaderList.splice(this.leaderList.length - extraItems, extraItems);
 		}
 	},
 
 	restoreDefaults: function(){
 		this.leaderList = this.defaultLeaderList;
 		this.sortAndTruncate();
+		this.saveToCookies();
 	}
 });

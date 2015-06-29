@@ -18,7 +18,9 @@ var StateEnd = FlynnState.extend({
 
 		this.nick = "";
 		this.score = mcp.custom.score;
-		if (mcp.custom.score < mcp.highscores[mcp.highscores.length-1][1]){
+		var worstEntry = mcp.custom.leaderboard.getWorstEntry();
+		console.log("worst entry:", worstEntry);
+		if (this.score < worstEntry['time']){
 			this.hasEnteredName = false;
 		} else {
 			this.hasEnteredName = true;
@@ -54,7 +56,7 @@ var StateEnd = FlynnState.extend({
 				this.nick = this.nick.trim();
 				this.nick = this.nick.substring(0,13); // Limit name length
 
-				this.mcp.updateHighScores(this.nick, this.score, false);
+				this.mcp.custom.leaderboard.add({'name':this.nick, 'time':this.score});
 			}
 		}
 	},
@@ -92,10 +94,10 @@ var StateEnd = FlynnState.extend({
 			// manually tweaked positions for, straightforward text
 			// positioning
 			ctx.vectorText("BEST TIMES", 4, null, 130, null, EndScreenColor);
-			for (var i = 0, len = this.mcp.highscores.length; i < len; i++) {
-				var hs = this.mcp.highscores[i];
-				ctx.vectorText(hs[0], 2, 390, 200+25*i, null, EndScreenColor);
-				ctx.vectorText(flynnTicksToTime(hs[1]), 2, 520, 200+25*i,   10, EndScreenColor);
+			for (var i = 0, len = this.mcp.custom.leaderboard.leaderList.length; i < len; i++) {
+				var leader = this.mcp.custom.leaderboard.leaderList[i];
+				ctx.vectorText(leader['name'], 2, 390, 200+25*i, null, EndScreenColor);
+				ctx.vectorText(flynnTicksToTime(leader['time']), 2, 520, 200+25*i,   10, EndScreenColor);
 			}
 			ctx.vectorText("PRESS <ENTER> TO CONTINUE", 2, null, 450, null, EndScreenColor);
 

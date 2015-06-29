@@ -35,6 +35,8 @@ var Game = Class.extend({
 			}
 		);
 		this.mcp.nextState = States.MENU;
+		this.mcp.custom.score = 0;
+
 		this.mcp.custom.leaderboard = new FlynnLeaderboard(
 			['name', 'time'],  // attributeList
 			5,                 // maxItems
@@ -123,9 +125,6 @@ var Game = Class.extend({
 		this.mcp.optionManager.addOption('musicEnabled', FlynnOptionType.BOOLEAN, true, true, 'MUSIC', null, null);
 		this.mcp.optionManager.addOption('resetScores', FlynnOptionType.COMMAND, true, true, 'RESET HIGH SCORES', null,
 			function(){self.resetScores();});
-
-		// Reset Scores
-		this.resetScores();
 		
 		// Set resize handler and force a resize
 		this.mcp.setResizeFunc( function(width, height){
@@ -140,14 +139,7 @@ var Game = Class.extend({
 	},
 
 	resetScores: function(){
-		this.mcp.highscores = [
-			["FIENDFODDER", 120*60],
-			["ROCKEM", 128*60],
-			["SOCKEM", 130*60],
-			["BECKAM", 160*60],
-			["ALI", 170*60],
-		];
-		this.mcp.custom.score = 0;
+		this.mcp.custom.leaderboard.restoreDefaults();
 	},
 
 	run: function() {
