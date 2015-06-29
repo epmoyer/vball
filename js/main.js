@@ -27,14 +27,30 @@ var Game = Class.extend({
 						return new StateMenu(self.mcp);
 					case States.GAME:
 						return new StateGame(self.mcp);
-					// case States.END:
-					// 	return new StateEnd(self.mcp);
+					case States.END:
+						return new StateEnd(self.mcp);
 					case States.CONFIG:
 						return new FlynnStateConfig(self.mcp, FlynnColors.ORANGE, FlynnColors.YELLOW, FlynnColors.CYAN, FlynnColors.MAGENTA);
 				}
 			}
 		);
 		this.mcp.nextState = States.MENU;
+		this.mcp.custom.leaderboard = new FlynnLeaderboard(
+			['name', 'time'],  // attributeList
+			5,                 // maxItems
+			'time',            // primaryAttribute
+			false              // sortDescending
+			);
+		this.mcp.custom.leaderboard.setDefaultList(
+			[
+				{'name': 'FIENDFODDER', 'time': 120*60},
+				{'name': 'ROCKEM',      'time': 128*60},
+				{'name': 'SOCKEM',      'time': 130*60},
+				{'name': 'BECKAM',      'time': 160*60},
+				{'name': 'ALI',         'time': 170*60},
+			]);
+		this.mcp.custom.leaderboard.loadFromCookies();
+		this.mcp.custom.leaderboard.saveToCookies();
 
         // Setup inputs
 		// this.input.addVirtualButton('P1 left', FlynnKeyboardMap['a'], FlynnConfigurable);

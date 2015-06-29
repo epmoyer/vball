@@ -89,14 +89,14 @@ var StateMenu = FlynnState.extend({
             ctx.vectorText("V-BALL", 10,  x_pos + 3, y_pos +3, null, FlynnColors.MAGENTA);
         }
 
-        ctx.vectorText("VERSION 0.3", 1.5, null, 140, null, FlynnColors.CYAN);
+        ctx.vectorText("VERSION 0.4", 1.5, null, 140, null, FlynnColors.CYAN);
 
         var startText;
         var controlsText1='', controlsText2='';
         if (this.mcp.arcadeModeEnabled) {
             startText = "PRESS START";
             controlsText1 = "LEFTMOST WHITE BUTTONS TO ROTATE        FAR RIGHT WHITE BUTTON TO THRUST";
-            controlsText2 = " "
+            controlsText2 = " ";
             // this.mcp.custom.thrustPrompt = "PRESS LEFT BUTTON TO THRUST";
             // this.mcp.custom.shootPrompt = "PRESS RIGHT BUTTON TO SHOOT";
             ctx.vectorText(this.mcp.credits + " Credits", 2, 10, this.canvasHeight - 20, null, FlynnColors.CYAN);

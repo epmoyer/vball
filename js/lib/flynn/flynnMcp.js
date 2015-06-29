@@ -181,14 +181,22 @@ var FlynnMcp = Class.extend({
 		}
 	},
 
-	updateHighScores: function (nickName, score){
+	updateHighScores: function (nickName, score, descending){
 		"use strict";
+		descending = typeof descending !== 'undefined' ? descending : true;
+
 		this.highscores.push([nickName, score]);
 
 		// sort hiscore in ascending order
-		this.highscores.sort(function(a, b) {
-			return b[1] - a[1];
-		});
+		if (descending){
+			this.highscores.sort(function(a, b) {
+				return b[1] - a[1];
+			});
+		} else {
+			this.highscores.sort(function(a, b) {
+				return a[1] - b[1];
+			});
+		}
 
 		// Drop the last
 		this.highscores.splice(this.highscores.length-1, 1);

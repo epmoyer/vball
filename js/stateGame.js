@@ -359,7 +359,8 @@ var StateGame = FlynnState.extend({
 		}
 
 		if (this.gameOver && input.virtualButtonIsPressed("UI_enter")){
-			this.mcp.nextState = States.MENU;
+			this.mcp.nextState = States.END;
+			this.mcp.custom.score = this.gameClock;
 			this.soundThrust.stop();
 		}
 

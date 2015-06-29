@@ -121,7 +121,7 @@ function flynnTicksToTime(ticks){
     var seconds = Math.floor((ticks - (minutes * 60 * 60)) / 60);
     return(
         flynnZeroPad(minutes,2) + ':' +
-        flynnZeroPad(seconds,2) + ':' +
+        flynnZeroPad(seconds,2) + '.' +
         flynnZeroPad(hundredths,2)
         );
 }
