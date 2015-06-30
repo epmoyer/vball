@@ -1,25 +1,23 @@
 //--------------------------------------------
-// StateEnd class
-//    End of game screens (high score entry/table)
+// flynnStateEnd class
+//    End of game screens (leaderboard score entry/table)
 //--------------------------------------------
 
-var CursorBlinkRate = 2;
-var EndScreenColor = FlynnColors.CYAN;
+var FlynnCursorBlinkRate = 2;
 
-var StateEnd = FlynnState.extend({
+var FlynnStateEnd = FlynnState.extend({
 
-	/**
-	 * Constructor
-	 * 
-	 * @param  {Game} game manager for the state
-	 */
-	init: function(mcp) {
+	init: function(mcp, score, leaderboard, color, title, prompt) {
 		this._super(mcp);
 
+		this.score = score;
+		this.leaderboard = leaderboard;
+		this.color = color;
+		this.title = title;
+		this.prompt = prompt;
+
 		this.nick = "";
-		this.score = mcp.custom.score;
-		var worstEntry = mcp.custom.leaderboard.getWorstEntry();
-		console.log("worst entry:", worstEntry);
+		var worstEntry = this.leaderboard.getWorstEntry();
 		if (this.score < worstEntry['time']){
 			this.hasEnteredName = false;
 		} else {
@@ -34,11 +32,6 @@ var StateEnd = FlynnState.extend({
 		this.cursorBlinkTimer = 0;
 	},
 
-	/**
-	 * @override State.handleInputs
-	 *
-	 * @param  {InputHandeler} input keeps track of all pressed keys
-	 */
 	handleInputs: function(input, paceFactor) {
 		if (this.hasEnteredName) {
 			if (input.virtualButtonIsPressed("UI_enter")) {
@@ -56,16 +49,13 @@ var StateEnd = FlynnState.extend({
 				this.nick = this.nick.trim();
 				this.nick = this.nick.substring(0,13); // Limit name length
 
-				this.mcp.custom.leaderboard.add({'name':this.nick, 'time':this.score});
+				this.leaderboard.add({'name':this.nick, 'time':this.score});
 			}
 		}
 	},
 
-	/**
-	 * @override State.update
-	 */
 	update: function(paceFactor) {
-		this.cursorBlinkTimer += ((CursorBlinkRate*2)/60) * paceFactor;
+		this.cursorBlinkTimer += ((FlynnCursorBlinkRate*2)/60) * paceFactor;
 		if (!this.hasEnteredName) {
 			this.namefield.focus(); // focus so player input is read
 			// exit if same namefield not updated
@@ -82,35 +72,30 @@ var StateEnd = FlynnState.extend({
 		}
 	},
 
-	/**
-	 * @override State.render
-	 * 
-	 * @param  {context2d} ctx augmented drawing context
-	 */
 	render: function(ctx) {
 		ctx.clearAll();
 
 		if (this.hasEnteredName) {
 			// manually tweaked positions for, straightforward text
 			// positioning
-			ctx.vectorText("BEST TIMES", 4, null, 130, null, EndScreenColor);
-			for (var i = 0, len = this.mcp.custom.leaderboard.leaderList.length; i < len; i++) {
-				var leader = this.mcp.custom.leaderboard.leaderList[i];
-				ctx.vectorText(leader['name'], 2, 390, 200+25*i, null, EndScreenColor);
-				ctx.vectorText(flynnTicksToTime(leader['time']), 2, 520, 200+25*i,   10, EndScreenColor);
+			ctx.vectorText(this.title, 4, null, 130, null, this.color);
+			for (var i = 0, len = this.leaderboard.leaderList.length; i < len; i++) {
+				var leader = this.leaderboard.leaderList[i];
+				ctx.vectorText(leader['name'], 2, 390, 200+25*i, null, this.color);
+				ctx.vectorText(flynnTicksToTime(leader['time']), 2, 520, 200+25*i,   10, this.color);
 			}
-			ctx.vectorText("PRESS <ENTER> TO CONTINUE", 2, null, 450, null, EndScreenColor);
+			ctx.vectorText("PRESS <ENTER> TO CONTINUE", 2, null, 450, null, this.color);
 
 		} else {
 
-			ctx.vectorText("YOUR TIME IS AMONG THE BEST!", 4, null, 100, null, EndScreenColor);
-			ctx.vectorText("TYPE YOUR NAME AND PRESS ENTER", 2, null, 180, null, EndScreenColor);
+			ctx.vectorText(this.prompt, 4, null, 100, null, this.color);
+			ctx.vectorText("TYPE YOUR NAME AND PRESS ENTER", 2, null, 180, null, this.color);
 			if(this.cursorBlinkTimer%2 > 1){
-				ctx.vectorText(" " + this.nick + "_", 3, null, 220, null, EndScreenColor);
+				ctx.vectorText(" " + this.nick + "_", 3, null, 220, null, this.color);
 			} else{
-				ctx.vectorText(this.nick, 3, null, 220, null, EndScreenColor);
+				ctx.vectorText(this.nick, 3, null, 220, null, this.color);
 			}
-			ctx.vectorText(flynnTicksToTime(this.score), 3, null, 300, null, EndScreenColor);
+			ctx.vectorText(flynnTicksToTime(this.score), 3, null, 300, null, this.color);
 		}
 	}
 });

@@ -28,7 +28,7 @@ var Game = Class.extend({
 					case States.GAME:
 						return new StateGame(self.mcp);
 					case States.END:
-						return new StateEnd(self.mcp);
+						return new FlynnStateEnd(self.mcp, self.mcp.custom.score, self.mcp.custom.leaderboard, FlynnColors.CYAN, 'BEST TIMES', 'YOUR TIME IS AMONG THE BEST!');
 					case States.CONFIG:
 						return new FlynnStateConfig(self.mcp, FlynnColors.ORANGE, FlynnColors.YELLOW, FlynnColors.CYAN, FlynnColors.MAGENTA);
 				}
