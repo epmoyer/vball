@@ -102,9 +102,10 @@ var FlynnMcp = Class.extend({
 			}
 		}
 		this.optionManager.addOption('vectorMode', FlynnOptionType.MULTI, vectorMode, vectorMode, 'VECTOR DISPLAY EMULATION',
-			[	['NONE',FlynnVectorMode.PLAIN],
-				['NORMAL',FlynnVectorMode.V_THIN],
-				['THICK' ,FlynnVectorMode.V_THICK],
+			[	['NONE',     FlynnVectorMode.PLAIN],
+				['NORMAL',   FlynnVectorMode.V_THIN],
+				['THICK' ,   FlynnVectorMode.V_THICK],
+				['FLICKER' , FlynnVectorMode.V_FLICKER]
 			],
 			null);
 

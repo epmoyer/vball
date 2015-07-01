@@ -15,9 +15,10 @@ var FlynnIsNotReversed = false;
 
 // Vector rendering emulation modes
 var FlynnVectorMode = {
-	PLAIN:   0,		// No Vector rendering emulation (plain lines)
-	V_THIN:  1,		// Thin Vector rendering 
-	V_THICK: 2,     // Thick Vector rendering
+	PLAIN:     0,	// No Vector rendering emulation (plain lines)
+	V_THIN:    1,	// Thin Vector rendering 
+	V_THICK:   2,	// Thick Vector rendering
+	V_FLICKER: 3,	// Flicker rendering    
 };
 
 var FlynnCanvas = Class.extend({
@@ -42,6 +43,7 @@ var FlynnCanvas = Class.extend({
 			ctx.fpsMsecCount = 0;
 			ctx.vectorVericies = [];
 			ctx.mcp = mcp;
+			ctx.ticks = 0;
 
 			ctx.ACODE = "A".charCodeAt(0);
 			ctx.ZEROCODE = "0".charCodeAt(0);
@@ -109,6 +111,16 @@ var FlynnCanvas = Class.extend({
 					case FlynnVectorMode.V_THIN:
 						vectorDimFactor = FlynnVectorDimFactorThin;
 						lineWidth = 1;
+						break;
+					case FlynnVectorMode.V_FLICKER:
+						if (Math.floor(this.ticks) & 0x04){
+							vectorDimFactor = 1;
+							lineWidth = 1;
+						}
+						else {
+							vectorDimFactor = FlynnVectorDimFactorThin;
+							lineWidth = 3;
+						}
 						break;
 				}
 				dim_color_rgb.r *= vectorDimFactor;
@@ -373,6 +385,10 @@ var FlynnCanvas = Class.extend({
 			if (paceFactor > FlynnMaxPaceRecoveryTicks) {
 				paceFactor = 1;
 			}
+			// if(paceFactor){
+			// 	self.ctx.ticks += paceFactor;
+			// }
+			self.ctx.ticks += 1;
 
 			++self.ctx.fpsFrameCount;
 			if (self.ctx.fpsFrameCount >= self.ctx.fpsFrameAverage){
