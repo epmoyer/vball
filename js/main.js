@@ -28,7 +28,9 @@ var Game = Class.extend({
 					case States.GAME:
 						return new StateGame(self.mcp);
 					case States.END:
-						return new FlynnStateEnd(self.mcp, self.mcp.custom.score, self.mcp.custom.leaderboard, FlynnColors.CYAN, 'BEST TIMES', 'YOUR TIME IS AMONG THE BEST!');
+						var newState = new FlynnStateEnd(self.mcp, self.mcp.custom.score, self.mcp.custom.leaderboard, FlynnColors.CYAN, 'BEST TIMES', 'YOUR TIME IS AMONG THE BEST!');
+						newState.scoreToString = function(score){return flynnTicksToTime(score);};  // Render score as time
+						return newState;
 					case States.CONFIG:
 						return new FlynnStateConfig(self.mcp, FlynnColors.ORANGE, FlynnColors.YELLOW, FlynnColors.CYAN, FlynnColors.MAGENTA);
 				}
@@ -38,18 +40,17 @@ var Game = Class.extend({
 		this.mcp.custom.score = 0;
 
 		this.mcp.custom.leaderboard = new FlynnLeaderboard(
-			['name', 'time'],  // attributeList
+			['name', 'score'],  // attributeList
 			5,                 // maxItems
-			'time',            // primaryAttribute
 			false              // sortDescending
 			);
 		this.mcp.custom.leaderboard.setDefaultList(
 			[
-				{'name': 'FIENDFODDER', 'time': 120*60},
-				{'name': 'ROCKEM',      'time': 128*60},
-				{'name': 'SOCKEM',      'time': 130*60},
-				{'name': 'BECKAM',      'time': 160*60},
-				{'name': 'ALI',         'time': 170*60},
+				{'name': 'FIENDFODDER', 'score': 120*60},
+				{'name': 'ROCKEM',      'score': 128*60},
+				{'name': 'SOCKEM',      'score': 130*60},
+				{'name': 'BECKAM',      'score': 160*60},
+				{'name': 'ALI',         'score': 170*60},
 			]);
 		this.mcp.custom.leaderboard.loadFromCookies();
 		this.mcp.custom.leaderboard.saveToCookies();

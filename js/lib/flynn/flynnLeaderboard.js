@@ -1,9 +1,8 @@
 var FlynnLeaderboard = Class.extend({
 
-	init: function(attributeList, maxItems, primaryAttribute, sortDescending){
+	init: function(attributeList, maxItems, sortDescending){
 		this.attributeList = attributeList;
 		this.maxItems = maxItems;
-		this.primaryAttribute = primaryAttribute;
 		this.sortDescending = sortDescending;
 		
 		this.leaderList = [];
@@ -86,11 +85,11 @@ var FlynnLeaderboard = Class.extend({
 		var self = this;
 		if (this.sortDescending){
 			this.leaderList.sort(function(a, b) {
-				return b[self.primaryAttribute] - a[self.primaryAttribute];
+				return b['score'] - a['score'];
 			});
 		} else {
 			this.leaderList.sort(function(a, b) {
-				return a[self.primaryAttribute] - b[self.primaryAttribute];
+				return a['score'] - b['score'];
 			});
 		}
 

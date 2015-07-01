@@ -18,7 +18,8 @@ var FlynnStateEnd = FlynnState.extend({
 
 		this.nick = "";
 		var worstEntry = this.leaderboard.getWorstEntry();
-		if (this.score < worstEntry['time']){
+		if (    (!this.leaderboard.sortDescending && this.score < worstEntry['score']) ||
+				( this.leaderboard.sortDescending && this.score > worstEntry['score']) ) {
 			this.hasEnteredName = false;
 		} else {
 			this.hasEnteredName = true;
@@ -30,6 +31,11 @@ var FlynnStateEnd = FlynnState.extend({
 		this.namefield.focus();
 		this.namefield.select();
 		this.cursorBlinkTimer = 0;
+	},
+
+	// Override this method to format scores as times etc.
+	scoreToString: function(score){
+		return score.toString();
 	},
 
 	handleInputs: function(input, paceFactor) {
@@ -49,7 +55,7 @@ var FlynnStateEnd = FlynnState.extend({
 				this.nick = this.nick.trim();
 				this.nick = this.nick.substring(0,13); // Limit name length
 
-				this.leaderboard.add({'name':this.nick, 'time':this.score});
+				this.leaderboard.add({'name':this.nick, 'score':this.score});
 			}
 		}
 	},
@@ -82,7 +88,7 @@ var FlynnStateEnd = FlynnState.extend({
 			for (var i = 0, len = this.leaderboard.leaderList.length; i < len; i++) {
 				var leader = this.leaderboard.leaderList[i];
 				ctx.vectorText(leader['name'], 2, 390, 200+25*i, null, this.color);
-				ctx.vectorText(flynnTicksToTime(leader['time']), 2, 520, 200+25*i,   10, this.color);
+				ctx.vectorText(this.scoreToString(leader['score']), 2, 520, 200+25*i,   10, this.color);
 			}
 			ctx.vectorText("PRESS <ENTER> TO CONTINUE", 2, null, 450, null, this.color);
 
@@ -95,7 +101,7 @@ var FlynnStateEnd = FlynnState.extend({
 			} else{
 				ctx.vectorText(this.nick, 3, null, 220, null, this.color);
 			}
-			ctx.vectorText(flynnTicksToTime(this.score), 3, null, 300, null, this.color);
+			ctx.vectorText(this.scoreToString(this.score), 3, null, 300, null, this.color);
 		}
 	}
 });
