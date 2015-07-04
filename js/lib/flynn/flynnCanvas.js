@@ -113,13 +113,18 @@ var FlynnCanvas = Class.extend({
 						lineWidth = 1;
 						break;
 					case FlynnVectorMode.V_FLICKER:
-						if (Math.floor(this.ticks) & 0x04){
+						var phase = Math.floor(this.ticks) % 3;
+						if (phase === 0){
+							vectorDimFactor = FlynnVectorDimFactorThin;
+							lineWidth = 3;
+						}
+						else if(phase === 1){
 							vectorDimFactor = 1;
 							lineWidth = 1;
 						}
-						else {
+						else{
 							vectorDimFactor = FlynnVectorDimFactorThin;
-							lineWidth = 3;
+							lineWidth = 1;
 						}
 						break;
 				}
@@ -385,9 +390,7 @@ var FlynnCanvas = Class.extend({
 			if (paceFactor > FlynnMaxPaceRecoveryTicks) {
 				paceFactor = 1;
 			}
-			// if(paceFactor){
-			// 	self.ctx.ticks += paceFactor;
-			// }
+
 			self.ctx.ticks += 1;
 
 			++self.ctx.fpsFrameCount;

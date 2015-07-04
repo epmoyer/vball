@@ -1,14 +1,13 @@
 var FlynnLeaderboard = Class.extend({
 
-	init: function(attributeList, maxItems, sortDescending){
+	init: function(mcp, attributeList, maxItems, sortDescending){
+		this.mcp = mcp;
 		this.attributeList = attributeList;
 		this.maxItems = maxItems;
 		this.sortDescending = sortDescending;
 		
 		this.leaderList = [];
 		this.defaultLeaderList = [];
-
-		console.log('Cookies: enabled=' + Cookies.enabled);
 	},
 
 	setDefaultList: function(defaultLeaderList){
@@ -25,7 +24,9 @@ var FlynnLeaderboard = Class.extend({
 				var attributeName = this.attributeList[attributeIndex];
 				var key = 'LB' + numLeaderItems + '_' + attributeName;
 				var attributeValue = Cookies.get(key);
-				console.log('get ' + key + ':' + attributeValue);
+				if(this.mcp.developerModeEnabled){
+					console.log('DEV: flynnLeaderboard: Fetched ' + key + ':' + attributeValue);
+				}
 				if(attributeValue){
 					leaderItem[attributeName] = attributeValue;
 				} else{
@@ -40,7 +41,6 @@ var FlynnLeaderboard = Class.extend({
 			if(!done){
 				this.leaderList.push(leaderItem);
 				++numLeaderItems;
-				console.log('Loaded leaderboard item:' + leaderItem);
 			}
 		}
 
@@ -61,7 +61,9 @@ var FlynnLeaderboard = Class.extend({
 				var key = 'LB' + i + '_' + attributeName;
 				var value = leaderItem[attributeName];
 				Cookies.set(key, value, { expires: Infinity });
-				console.log('set ' + key + ':' + value);
+				if(this.mcp.developerModeEnabled){
+					console.log('DEV: flynnLeaderboard: Saved ' + key + ':' + value);
+				}
 			}
 		}
 	},

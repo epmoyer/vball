@@ -35,10 +35,14 @@ var FlynnOptionManager = Class.extend({
 	init: function(mcp){
 		this.mcp = mcp;
 		this.optionDescriptors = {};
+		this.cookiesFetched = false;
 
 		var self = this;
 		this.addOption('revertDefaults', FlynnOptionType.COMMAND, true, true, 'REVERT TO DEFAULTS', null,
-			function(){self.revertToDefaults();});
+			function(){
+				self.revertToDefaults();
+				self.saveAllToCookies();
+			});
 	},
 
 	addOption: function(keyName, type, defaultValue, currentValue, promptText, promptValues, commandHandler){
@@ -71,6 +75,11 @@ var FlynnOptionManager = Class.extend({
 			console.print('DEV: Warnining: FlynnOptionManager.setOption() called for key "' +
 				keyName + '", which does not match an existing option.  Doing nothing.');
 		}
+
+		if(this.cookiesFetched){
+			// After cookies have been fetched, any option set will be written back to cookies.
+			this.saveOptionToCookies(keyName);
+		}
 	},
 
 	getOption: function(keyName){
@@ -78,7 +87,7 @@ var FlynnOptionManager = Class.extend({
 			return(this.optionDescriptors[keyName].currentValue);
 		}
 		else{
-			console.print('DEV: Warnining: FlynnOptionManager.getOption() called for key "' +
+			console.log('DEV: Warnining: FlynnOptionManager.getOption() called for key "' +
 				keyName + '", which does not match an existing option.  Returning null.');
 			return null;
 		}
@@ -90,6 +99,61 @@ var FlynnOptionManager = Class.extend({
 			descriptor.currentValue = descriptor.defaultValue;
 			if(descriptor.type in FlynnShadowedOptionTypes){
 				this.mcp.options[keyName] = descriptor.defaultValue;
+			}
+		}
+	},
+
+	loadFromCookies: function(){
+		// Revert to defaults
+		this.revertToDefaults();
+
+		// Retreive all existant options from stored cookies.  (Any options not
+		// retrievable from cookies will remain at their default settings.)
+		var optionKeyNames = this.getOptionKeyNames();
+		for(var i=0, len=optionKeyNames.length; i<len; i++){
+			var optionKey = optionKeyNames[i];
+			var cookieKey = 'OPT_' + optionKey;
+			var attributeValue = Cookies.get(cookieKey);
+			if(attributeValue){
+				// Option retrieved from cookies
+				try{
+					var parsedValue = JSON.parse(attributeValue);
+					this.setOption(optionKey, parsedValue);
+					if(this.mcp.developerModeEnabled){
+						console.log('DEV: flynnOptionManager: Fetched "' + optionKey + '" = "' + parsedValue + '".');
+					}
+				}
+				catch(err){
+					console.log('DEV: Could not parse attribute value "' + attributeValue + '" for cookie "' + cookieKey + '".');
+				}
+			}
+		}
+
+		// Save all options back to cookies (so that they will all be fetchable next time)
+		// (This will catch any options which were not already present as cookies)
+		this.saveAllToCookies();
+
+		this.cookiesFetched = true;
+	},
+
+	saveAllToCookies: function(){
+		// Retreive all options to cookies.
+		var optionKeyNames = this.getOptionKeyNames();
+		for(var i=0, len=optionKeyNames.length; i<len; i++){
+			var optionKey = optionKeyNames[i];
+			this.saveOptionToCookies(optionKey);
+		}
+	},
+
+	saveOptionToCookies: function(optionKey){
+		// All option types except COMMAND (i.e. INPUT_KEY, MULTI, and BOOLEAN) will be saved to cookies.
+		if(this.optionDescriptors[optionKey].type != FlynnOptionType.COMMAND){
+			var cookieKey = 'OPT_' + optionKey;
+			var optionValue = this.getOption(optionKey);
+			var cookieValue = JSON.stringify(optionValue);
+			Cookies.set(cookieKey, cookieValue, { expires: Infinity });
+			if(this.mcp.developerModeEnabled){
+				console.log('DEV: flynnOptionManager: Saved "' + optionKey + '" = "' + optionValue + '".');
 			}
 		}
 	},
