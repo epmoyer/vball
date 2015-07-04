@@ -112,7 +112,7 @@ var FlynnOptionManager = Class.extend({
 		var optionKeyNames = this.getOptionKeyNames();
 		for(var i=0, len=optionKeyNames.length; i<len; i++){
 			var optionKey = optionKeyNames[i];
-			var cookieKey = 'OPT_' + optionKey;
+			var cookieKey = document.title + ':OPT_' + optionKey;
 			var attributeValue = Cookies.get(cookieKey);
 			if(attributeValue){
 				// Option retrieved from cookies
@@ -148,7 +148,7 @@ var FlynnOptionManager = Class.extend({
 	saveOptionToCookies: function(optionKey){
 		// All option types except COMMAND (i.e. INPUT_KEY, MULTI, and BOOLEAN) will be saved to cookies.
 		if(this.optionDescriptors[optionKey].type != FlynnOptionType.COMMAND){
-			var cookieKey = 'OPT_' + optionKey;
+			var cookieKey = document.title + ':OPT_' + optionKey;
 			var optionValue = this.getOption(optionKey);
 			var cookieValue = JSON.stringify(optionValue);
 			Cookies.set(cookieKey, cookieValue, { expires: Infinity });

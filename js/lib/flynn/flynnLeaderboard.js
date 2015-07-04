@@ -22,7 +22,7 @@ var FlynnLeaderboard = Class.extend({
 			var leaderItem = {};
 			for(var attributeIndex = 0, len = this.attributeList.length; attributeIndex<len; ++attributeIndex){
 				var attributeName = this.attributeList[attributeIndex];
-				var key = 'LB' + numLeaderItems + '_' + attributeName;
+				var key = document.title + ':LB' + numLeaderItems + '_' + attributeName;
 				var attributeValue = Cookies.get(key);
 				if(this.mcp.developerModeEnabled){
 					console.log('DEV: flynnLeaderboard: Fetched ' + key + ':' + attributeValue);
@@ -58,7 +58,7 @@ var FlynnLeaderboard = Class.extend({
 			var leaderItem = this.leaderList[i];
 			for(var attributeIndex = 0, len2 = this.attributeList.length; attributeIndex<len2; ++attributeIndex){
 				var attributeName = this.attributeList[attributeIndex];
-				var key = 'LB' + i + '_' + attributeName;
+				var key = document.title + ':LB' + i + '_' + attributeName;
 				var value = leaderItem[attributeName];
 				Cookies.set(key, value, { expires: Infinity });
 				if(this.mcp.developerModeEnabled){

@@ -78,6 +78,7 @@ var FlynnMcp = Class.extend({
 		this.browserSupportsTouch = ('ontouchstart' in document.documentElement);
 
 		if (this.developerModeEnabled){
+			console.log('DEV: title=' + document.title);
 			console.log('DEV: browserSupportsPeformance=', this.browserSupportsPerformance);
 			console.log('DEV: browserIsIos=', this.browserIsIos);
 			console.log('DEV: browserSupportsTouch=', this.browserSupportsTouch);
