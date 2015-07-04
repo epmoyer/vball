@@ -4,6 +4,7 @@
 //--------------------------------------------
 
 var FlynnCursorBlinkRate = 2;
+var FlynnMaxLeaderboardNameLength = 13;
 
 var FlynnStateEnd = FlynnState.extend({
 
@@ -74,6 +75,7 @@ var FlynnStateEnd = FlynnState.extend({
 
 			// clean namefield value and set to nick variable
 			this.namefield.value = this.namefield.value.replace(/[^a-zA-Z0-9\s]/g, "");
+			this.namefield.value = this.namefield.value.substring(0,13); // Limit name length
 			this.nick = this.namefield.value;
 		}
 	},
@@ -82,13 +84,11 @@ var FlynnStateEnd = FlynnState.extend({
 		ctx.clearAll();
 
 		if (this.hasEnteredName) {
-			// manually tweaked positions for, straightforward text
-			// positioning
 			ctx.vectorText(this.title, 4, null, 130, null, this.color);
 			for (var i = 0, len = this.leaderboard.leaderList.length; i < len; i++) {
 				var leader = this.leaderboard.leaderList[i];
-				ctx.vectorText(leader['name'], 2, 390, 200+25*i, null, this.color);
-				ctx.vectorText(this.scoreToString(leader['score']), 2, 520, 200+25*i,   10, this.color);
+				ctx.vectorText(leader['name'], 2, 360, 200+25*i, null, this.color);
+				ctx.vectorText(this.scoreToString(leader['score']), 2, 550, 200+25*i,   10, this.color);
 			}
 			ctx.vectorText("PRESS <ENTER> TO CONTINUE", 2, null, 450, null, this.color);
 
