@@ -66,6 +66,10 @@ var StateMenu = FlynnState.extend({
         if (input.virtualButtonIsPressed("UI_escape")) {
             this.mcp.nextState = States.CONFIG;
         }
+
+        if (input.virtualButtonIsPressed("UI_exit") && this.mcp.backEnabled){
+            window.history.back();
+        }
 	},
 
 	update: function(paceFactor) {
@@ -75,12 +79,6 @@ var StateMenu = FlynnState.extend({
 	render: function(ctx) {
         ctx.clearAll();
         var title_step = 5;
-
-        // Font Test
-        //ctx.vectorText("!\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`",
-        //	2.5, 30, 30, null, FlynnColors.MAGENTA);
-        //ctx.vectorText("Unimplemented:{|}~",
-        //	2.5, 30, 55, null, FlynnColors.MAGENTA);
 
         for (var angle = 0; angle < Math.PI + 0.1; angle += Math.PI) {
             x_pos = 350;
@@ -163,8 +161,11 @@ var StateMenu = FlynnState.extend({
 
 		ctx.vectorText("WRITTEN BY ERIC MOYER (FIENDFODDER)", 1.5, null, 700, null, FlynnColors.CYAN);
         ctx.vectorText('PRESS <ESCAPE> TO CONFIGURE CONTROLS', 1.5, null, 715, null, FlynnColors.CYAN);
+        if(this.mcp.backEnabled){
+            ctx.vectorText('PRESS <TAB> TO EXIT GAME', 1.5, null, 730, null, FlynnColors.CYAN);
+        }
 
-
+        ctx.vectorText('FLYNN ' + this.mcp.version, 1.0, this.canvasWidth-3, this.canvasHeight-10, 0, FlynnColors.GRAY);
 	}
 
 });

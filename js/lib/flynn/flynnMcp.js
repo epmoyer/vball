@@ -15,11 +15,14 @@ var FlynnMcp = Class.extend({
 		this.canvasHeight = canvasHeight;
 		this.input = input;
 		this.noChangeState = noChangeState;
-		this.developerModeEnabled = false;
 		this.gameSpeedFactor = gameSpeedFactor;
 
-		this.credits = 0;
+		this.developerModeEnabled = false;
 		this.arcadeModeEnabled = false;
+		this.iCadeModeEnabled = false;
+		this.backEnabled = false;
+		
+		this.credits = 0;
 		this.nextState = noChangeState;
 		this.currentState = null;
 
@@ -27,7 +30,7 @@ var FlynnMcp = Class.extend({
 		this.devLowFpsPaceFactor = 0;
 		this.devLowFpsFrameCount = 0;
 
-		this.version = 'v1.0';  // Flynn version
+		this.version = 'v1.1';  // Flynn version
 
 		this.stateBuilderFunc = null;
 		this.resizeFunc = null;
@@ -46,16 +49,28 @@ var FlynnMcp = Class.extend({
 			["No Name", 100],
 		];
 
-		// Detect developer mode from URL arguments ("?develop=true")
-        if(flynnGetUrlValue("develop")=='true'){
+		// Detect developer mode from URL arguments ("?develop")
+        if(flynnGetUrlFlag("develop")){
             this.developerModeEnabled = true;
         }
 		
 		this.canvas = new FlynnCanvas(this, canvasWidth, canvasHeight);
 
-		// Detect arcade mode from URL arguments ("?arcade=true")
-        if(flynnGetUrlValue("arcade")=='true'){
+		// Detect arcade mode from URL arguments ("?arcade")
+        if(flynnGetUrlFlag("arcade")){
             this.arcadeModeEnabled = true;
+        }
+
+        // Detect iCade mode from URL arguments ("?icade")
+        if(flynnGetUrlFlag("icade")){
+            this.iCadeModeEnabled = true;
+            this.input.enableICade();
+            this.arcadeModeEnabled = true; // iCade mode forces arcade mode
+        }
+
+        // Detect back enable from URL arguments ("?back")
+        if(flynnGetUrlFlag("back")){
+            this.backEnabled = true;
         }
 
 		//--------------------------
@@ -79,10 +94,13 @@ var FlynnMcp = Class.extend({
 
 		if (this.developerModeEnabled){
 			console.log('DEV: title=' + document.title);
-			console.log('DEV: browserSupportsPeformance=', this.browserSupportsPerformance);
-			console.log('DEV: browserIsIos=', this.browserIsIos);
-			console.log('DEV: browserSupportsTouch=', this.browserSupportsTouch);
+			console.log('DEV: browserSupportsPeformance=' + this.browserSupportsPerformance);
+			console.log('DEV: browserIsIos=' + this.browserIsIos);
+			console.log('DEV: browserSupportsTouch=' + this.browserSupportsTouch);
 			console.log('DEV: Cookies: enabled=' + Cookies.enabled);
+			console.log('DEV: arcadeModeEnabled=' + this.arcadeModeEnabled);
+			console.log('DEV: iCadeModeEnabled=' + this.iCadeModeEnabled);
+			console.log('DEV: backEnabled=' + this.backEnabled);
 		}
 
 		// Set Vector mode
