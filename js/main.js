@@ -1,147 +1,166 @@
-var GameCanvasHeight = 768;
-var GameCanvasWidth = 1024;
-var GameSpeedFactor = 0.7;
+if (typeof Game == "undefined") {
+   var Game = {};  // Create namespace
+}
 
-var States = {
-	NO_CHANGE: 0,
-	MENU:      1,
-	CONFIG:    2,
-	GAME:      3,
-	END:       4
+Game.CANVAS_HEIGHT = 768;
+Game.CANVAS_WIDTH = 1024;
+Game.SPEED_FACTOR = 0.7;
+
+Game.States = {
+    NO_CHANGE: 0,
+    MENU:      1,
+    CONFIG:    2,
+    GAME:      3,
+    END:       4
 };
 
-var Game = Class.extend({
-	
-	init: function() {
-		"use strict";
+Game.Main = Class.extend({
+    
+    init: function() {
+        "use strict";
 
-		var self = this;
+        var self = this;
         
-        this.input = new FlynnInputHandler();
+        this.input = new Flynn.InputHandler();
 
-		this.mcp = new FlynnMcp(GameCanvasWidth, GameCanvasHeight, this.input, States.NO_CHANGE, GameSpeedFactor);
-		this.mcp.setStateBuilderFunc(
-			function(state){
-				switch(state){
-					case States.MENU:
-						return new StateMenu(self.mcp);
-					case States.GAME:
-						return new StateGame(self.mcp);
-					case States.END:
-						var newState = new FlynnStateEnd(self.mcp, self.mcp.custom.score, self.mcp.custom.leaderboard, FlynnColors.CYAN, 'BEST TIMES', 'YOUR TIME IS AMONG THE BEST!');
-						newState.scoreToString = function(score){return flynnTicksToTime(score);};  // Render score as time
-						return newState;
-					case States.CONFIG:
-						return new FlynnStateConfig(self.mcp, FlynnColors.ORANGE, FlynnColors.YELLOW, FlynnColors.CYAN, FlynnColors.MAGENTA);
-				}
-			}
-		);
-		this.mcp.nextState = States.MENU;
-		this.mcp.custom.score = 0;
+        this.mcp = new Flynn.Mcp(Game.CANVAS_WIDTH, Game.CANVAS_HEIGHT, this.input, Game.States.NO_CHANGE, Game.SPEED_FACTOR);
+        this.mcp.setStateBuilderFunc(
+            function(state){
+                switch(state){
+                    case Game.States.MENU:
+                        return new Game.StateMenu(self.mcp);
+                    case Game.States.GAME:
+                        return new Game.StateGame(self.mcp);
+                    case Game.States.END:
+                        var newState = new Flynn.StateEnd(
+                            self.mcp,
+                            self.mcp.custom.score,
+                            self.mcp.custom.leaderboard,
+                            Flynn.Colors.CYAN,
+                            'BEST TIMES',
+                            'YOUR TIME IS AMONG THE BEST!',
+                            Game.States.MENU
+                            );
+                        newState.scoreToString = function(score){return Flynn.Util.ticksToTime(score);};  // Render score as time
+                        return newState;
+                    case Game.States.CONFIG:
+                        return new Flynn.StateConfig(
+                            self.mcp, 
+                            Flynn.Colors.ORANGE, 
+                            Flynn.Colors.YELLOW,
+                            Flynn.Colors.CYAN,
+                            Flynn.Colors.MAGENTA,
+                            Game.States.MENU
+                            );
+                }
+            }
+        );
+        this.mcp.nextState = Game.States.MENU;
+        this.mcp.custom.score = 0;
 
-		this.mcp.custom.leaderboard = new FlynnLeaderboard(
-			this.mcp,
-			['name', 'score'],  // attributeList
-			5,                  // maxItems
-			false               // sortDescending
-			);
-		this.mcp.custom.leaderboard.setDefaultList(
-			[
-				{'name': 'FIENDFODDER', 'score': 120*60},
-				{'name': 'ROCKEM',      'score': 128*60},
-				{'name': 'SOCKEM',      'score': 130*60},
-				{'name': 'BECKAM',      'score': 160*60},
-				{'name': 'ALI',         'score': 170*60},
-			]);
-		this.mcp.custom.leaderboard.loadFromCookies();
-		this.mcp.custom.leaderboard.saveToCookies();
+        this.mcp.custom.leaderboard = new Flynn.Leaderboard(
+            this.mcp,
+            ['name', 'score'],  // attributeList
+            5,                  // maxItems
+            false               // sortDescending
+            );
+        this.mcp.custom.leaderboard.setDefaultList(
+            [
+                {'name': 'FIENDFODDER', 'score': 120*60},
+                {'name': 'ROCKEM',      'score': 128*60},
+                {'name': 'SOCKEM',      'score': 130*60},
+                {'name': 'BECKAM',      'score': 160*60},
+                {'name': 'ALI',         'score': 170*60},
+            ]);
+        this.mcp.custom.leaderboard.loadFromCookies();
+        this.mcp.custom.leaderboard.saveToCookies();
 
         // Setup inputs
-		if(!this.mcp.iCadeModeEnabled){
-			this.input.addVirtualButton('P1 left', FlynnKeyboardMap['a'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 right', FlynnKeyboardMap['s'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 thrust', FlynnKeyboardMap['d'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 punch left', FlynnKeyboardMap['f'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 punch right', FlynnKeyboardMap['g'], FlynnConfigurable);
+        if(!this.mcp.iCadeModeEnabled){
+            this.input.addVirtualButton('P1 left', Flynn.KeyboardMap.a, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 right', Flynn.KeyboardMap.s, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 thrust', Flynn.KeyboardMap.d, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 punch left', Flynn.KeyboardMap.f, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 punch right', Flynn.KeyboardMap.g, Flynn.BUTTON_CONFIGURABLE);
 
-			this.input.addVirtualButton('P2 left', FlynnKeyboardMap['i'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 right', FlynnKeyboardMap['o'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 thrust', FlynnKeyboardMap['p'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 punch left', FlynnKeyboardMap['['], FlynnConfigurable);
-			this.input.addVirtualButton('P2 punch right', FlynnKeyboardMap[']'], FlynnConfigurable);
-		}else{
-			this.input.addVirtualButton('P1 left', FlynnKeyboardMap['ICADE_left'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 right', FlynnKeyboardMap['ICADE_right'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 thrust', FlynnKeyboardMap['ICADE_up'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 punch left', FlynnKeyboardMap['ICADE_T1'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 punch right', FlynnKeyboardMap['ICADE_T2'], FlynnConfigurable);
+            this.input.addVirtualButton('P2 left', Flynn.KeyboardMap.i, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 right', Flynn.KeyboardMap.o, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 thrust', Flynn.KeyboardMap.p, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 punch left', Flynn.KeyboardMap.left_bracket, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 punch right', Flynn.KeyboardMap.right_bracket, Flynn.BUTTON_CONFIGURABLE);
+        }else{
+            this.input.addVirtualButton('P1 left', Flynn.KeyboardMap.icade_left, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 right', Flynn.KeyboardMap.icade_right, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 thrust', Flynn.KeyboardMap.icade_up, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 punch left', Flynn.KeyboardMap.icade_t1, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 punch right', Flynn.KeyboardMap.icade_t2, Flynn.BUTTON_CONFIGURABLE);
 
-			this.input.addVirtualButton('P2 left', FlynnKeyboardMap['ICADE_B1'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 right', FlynnKeyboardMap['ICADE_B2'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 thrust', FlynnKeyboardMap['ICADE_B3'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 punch left', FlynnKeyboardMap['ICADE_T3'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 punch right', FlynnKeyboardMap['ICADE_T4'], FlynnConfigurable);
-		}		
+            this.input.addVirtualButton('P2 left', Flynn.KeyboardMap.icade_b1, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 right', Flynn.KeyboardMap.icade_b2, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 thrust', Flynn.KeyboardMap.icade_b3, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 punch left', Flynn.KeyboardMap.icade_t3, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 punch right', Flynn.KeyboardMap.icade_t4, Flynn.BUTTON_CONFIGURABLE);
+        }       
 
-		if(this.mcp.developerModeEnabled){
-			this.input.addVirtualButton('dev_metrics', FlynnKeyboardMap['6'], FlynnNotConfigurable);
-			this.input.addVirtualButton('dev_slow_mo', FlynnKeyboardMap['7'], FlynnNotConfigurable);
-			this.input.addVirtualButton('dev_fps_20', FlynnKeyboardMap['\\'], FlynnNotConfigurable);
-			this.input.addVirtualButton('dev_add_points_0', FlynnKeyboardMap['8'], FlynnNotConfigurable);
-			this.input.addVirtualButton('dev_add_points_1', FlynnKeyboardMap['9'], FlynnNotConfigurable);
-			this.input.addVirtualButton('dev_reset', FlynnKeyboardMap['0'], FlynnNotConfigurable);
-		}
-		if(this.mcp.arcadeModeEnabled && !this.mcp.iCadeModeEnabled){
-			// Re-map game keys
-			this.input.addVirtualButton('P1 left', FlynnKeyboardMap['left'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 right', FlynnKeyboardMap['right'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 thrust', FlynnKeyboardMap['enter'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 punch left', FlynnKeyboardMap['z'], FlynnConfigurable);
-			this.input.addVirtualButton('P1 punch right', FlynnKeyboardMap['spacebar'], FlynnConfigurable);
+        if(this.mcp.developerModeEnabled){
+            this.input.addVirtualButton('dev_metrics', Flynn.KeyboardMap.num_6, Flynn.BUTTON_NOT_CONFIGURABLE);
+            this.input.addVirtualButton('dev_slow_mo', Flynn.KeyboardMap.num_7, Flynn.BUTTON_NOT_CONFIGURABLE);
+            this.input.addVirtualButton('dev_fps_20', Flynn.KeyboardMap.backslash, Flynn.BUTTON_NOT_CONFIGURABLE);
+            this.input.addVirtualButton('dev_add_points_0', Flynn.KeyboardMap.num_8, Flynn.BUTTON_NOT_CONFIGURABLE);
+            this.input.addVirtualButton('dev_add_points_1', Flynn.KeyboardMap.num_9, Flynn.BUTTON_NOT_CONFIGURABLE);
+            this.input.addVirtualButton('dev_reset', Flynn.KeyboardMap.num_0, Flynn.BUTTON_NOT_CONFIGURABLE);
+        }
+        if(this.mcp.arcadeModeEnabled && !this.mcp.iCadeModeEnabled){
+            // Re-map game keys
+            this.input.addVirtualButton('P1 left', Flynn.KeyboardMap.left, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 right', Flynn.KeyboardMap.right, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 thrust', Flynn.KeyboardMap.enter, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 punch left', Flynn.KeyboardMap.z, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P1 punch right', Flynn.KeyboardMap.spacebar, Flynn.BUTTON_CONFIGURABLE);
 
-			this.input.addVirtualButton('P2 left', FlynnKeyboardMap['d'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 right', FlynnKeyboardMap['g'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 thrust', FlynnKeyboardMap['i'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 punch left', FlynnKeyboardMap['o'], FlynnConfigurable);
-			this.input.addVirtualButton('P2 punch right', FlynnKeyboardMap['p'], FlynnConfigurable);
-		}
+            this.input.addVirtualButton('P2 left', Flynn.KeyboardMap.d, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 right', Flynn.KeyboardMap.g, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 thrust', Flynn.KeyboardMap.i, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 punch left', Flynn.KeyboardMap.o, Flynn.BUTTON_CONFIGURABLE);
+            this.input.addVirtualButton('P2 punch right', Flynn.KeyboardMap.p, Flynn.BUTTON_CONFIGURABLE);
+        }
 
-		// Options
-		this.mcp.optionManager.addOptionFromVirtualButton('P1 left');
-		this.mcp.optionManager.addOptionFromVirtualButton('P1 right');
-		this.mcp.optionManager.addOptionFromVirtualButton('P1 thrust');
-		this.mcp.optionManager.addOptionFromVirtualButton('P1 punch left');
-		this.mcp.optionManager.addOptionFromVirtualButton('P1 punch right');
-		this.mcp.optionManager.addOptionFromVirtualButton('P2 left');
-		this.mcp.optionManager.addOptionFromVirtualButton('P2 right');
-		this.mcp.optionManager.addOptionFromVirtualButton('P2 thrust');
-		this.mcp.optionManager.addOptionFromVirtualButton('P2 punch left');
-		this.mcp.optionManager.addOptionFromVirtualButton('P2 punch right');
-		this.mcp.optionManager.addOption('musicEnabled', FlynnOptionType.BOOLEAN, true, true, 'MUSIC', null, null);
-		this.mcp.optionManager.addOption('resetScores', FlynnOptionType.COMMAND, true, true, 'RESET HIGH SCORES', null,
-			function(){self.resetScores();});
+        // Options
+        this.mcp.optionManager.addOptionFromVirtualButton('P1 left');
+        this.mcp.optionManager.addOptionFromVirtualButton('P1 right');
+        this.mcp.optionManager.addOptionFromVirtualButton('P1 thrust');
+        this.mcp.optionManager.addOptionFromVirtualButton('P1 punch left');
+        this.mcp.optionManager.addOptionFromVirtualButton('P1 punch right');
+        this.mcp.optionManager.addOptionFromVirtualButton('P2 left');
+        this.mcp.optionManager.addOptionFromVirtualButton('P2 right');
+        this.mcp.optionManager.addOptionFromVirtualButton('P2 thrust');
+        this.mcp.optionManager.addOptionFromVirtualButton('P2 punch left');
+        this.mcp.optionManager.addOptionFromVirtualButton('P2 punch right');
+        this.mcp.optionManager.addOption('musicEnabled', Flynn.OptionType.BOOLEAN, true, true, 'MUSIC', null, null);
+        this.mcp.optionManager.addOption('resetScores', Flynn.OptionType.COMMAND, true, true, 'RESET HIGH SCORES', null,
+            function(){self.resetScores();});
 
-		// Restore user option settings from cookies
-		this.mcp.optionManager.loadFromCookies();
-		
-		// Set resize handler and force a resize
-		this.mcp.setResizeFunc( function(width, height){
-			if(self.mcp.browserSupportsTouch){
-				// self.input.addTouchRegion("rotate left",0,0,width/4,height); // Left quarter
-				// self.input.addTouchRegion("rotate right",width/4+1,0,width/2,height); // Left second quarter
-				// self.input.addTouchRegion("thrust",width/2+1,0,width,height); // Right half
-				// self.input.addTouchRegion("UI_enter",0,0,width,height); // Whole screen
-			}
-		});
-		this.mcp.resize();
-	},
+        // Restore user option settings from cookies
+        this.mcp.optionManager.loadFromCookies();
+        
+        // Set resize handler and force a resize
+        this.mcp.setResizeFunc( function(width, height){
+            if(self.mcp.browserSupportsTouch){
+                // self.input.addTouchRegion("rotate left",0,0,width/4,height); // Left quarter
+                // self.input.addTouchRegion("rotate right",width/4+1,0,width/2,height); // Left second quarter
+                // self.input.addTouchRegion("thrust",width/2+1,0,width,height); // Right half
+                // self.input.addTouchRegion("UI_enter",0,0,width,height); // Whole screen
+            }
+        });
+        this.mcp.resize();
+    },
 
-	resetScores: function(){
-		this.mcp.custom.leaderboard.restoreDefaults();
-	},
+    resetScores: function(){
+        this.mcp.custom.leaderboard.restoreDefaults();
+    },
 
-	run: function() {
-		// Start the game
-		this.mcp.run();
-	}
+    run: function() {
+        // Start the game
+        this.mcp.run();
+    }
 });
