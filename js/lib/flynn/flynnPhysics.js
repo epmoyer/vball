@@ -86,178 +86,152 @@ var FlynnPhysics= Class.extend({
             obj = obj.GetNext();
         }
         this.context.restore();
-    }
+    },
+
+    collision: function(){
+        this.listener = new Box2D.Dynamics.b2ContactListener();
+        this.listener.PostSolve = function (contact, impulse) {
+            var bodyA = contact.GetFixtureA().GetBody().GetUserData(),
+                bodyB = contact.GetFixtureB().GetBody().GetUserData();
+     
+            if (bodyA.contact) {
+                bodyA.contact(contact, impulse, true);
+            }
+            if (bodyB.contact) {
+                bodyB.contact(contact, impulse, false);
+            }
+     
+        };
+        this.world.SetContactListener(this.listener);
+    },
 });
 
+var FlynnBody= Class.extend({
 
-FlynnPhysics.prototype.collision = function () {
-    this.listener = new Box2D.Dynamics.b2ContactListener();
-    this.listener.PostSolve = function (contact, impulse) {
-        var bodyA = contact.GetFixtureA().GetBody().GetUserData(),
-            bodyB = contact.GetFixtureB().GetBody().GetUserData();
+    defaults: {
+        shape: "block",
+        width: 0.4,
+        height: 0.4,
+        radius: 0.4,
+    },
+
+    fixtureDefaults: {
+        density: 2,
+        friction: 1,
+        // restitution: 0.2
+        restitution: 0.7,
+    },
  
-        if (bodyA.contact) {
-            bodyA.contact(contact, impulse, true);
+    definitionDefaults: {
+        active: true,
+        allowSleep: true,
+        angle: 0,
+        angularVelocity: 0,
+        awake: true,
+        bullet: false,
+        fixedRotation: false,
+    },
+
+    init: function(physics, details) {
+        this.details = details = details || {};
+     
+        // Create the definition
+        this.definition = new b2BodyDef();
+     
+        // Set up the definition
+        for (var k in this.definitionDefaults) {
+            this.definition[k] = details[k] || this.definitionDefaults[k];
         }
-        if (bodyB.contact) {
-            bodyB.contact(contact, impulse, false);
+        this.definition.position = new b2Vec2(details.x || 0, details.y || 0);
+        this.definition.linearVelocity = new b2Vec2(details.vx || 0, details.vy || 0);
+        this.definition.userData = this;
+        this.definition.type = details.type == "static" ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
+     
+        // Create the Body
+        this.body = physics.world.CreateBody(this.definition);
+     
+        // Create the fixture
+        this.fixtureDef = new b2FixtureDef();
+        for (var l in this.fixtureDefaults) {
+            this.fixtureDef[l] = details[l] || this.fixtureDefaults[l];
         }
- 
-    };
-    this.world.SetContactListener(this.listener);
-};
-
-var FlynnBody = function (physics, details) {
-    this.details = details = details || {};
- 
-    // Create the definition
-    this.definition = new b2BodyDef();
- 
-    // Set up the definition
-    for (var k in this.definitionDefaults) {
-        this.definition[k] = details[k] || this.definitionDefaults[k];
-    }
-    this.definition.position = new b2Vec2(details.x || 0, details.y || 0);
-    this.definition.linearVelocity = new b2Vec2(details.vx || 0, details.vy || 0);
-    this.definition.userData = this;
-    this.definition.type = details.type == "static" ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
- 
-    // Create the Body
-    this.body = physics.world.CreateBody(this.definition);
- 
-    // Create the fixture
-    this.fixtureDef = new b2FixtureDef();
-    for (var l in this.fixtureDefaults) {
-        this.fixtureDef[l] = details[l] || this.fixtureDefaults[l];
-    }
- 
- 
-    details.shape = details.shape || this.defaults.shape;
-    //details.color = details.color || this.defaults.color;
- 
-    switch (details.shape) {
-        case "circle":
-            details.radius = details.radius || this.defaults.radius;
-            this.fixtureDef.shape = new b2CircleShape(details.radius);
-            break;
-        case "polygon":
-            this.fixtureDef.shape = new b2PolygonShape();
-            this.fixtureDef.shape.SetAsArray(details.points, details.points.length);
-            break;
-        case "block":
-        default:
-            details.width = details.width || this.defaults.width;
-            details.height = details.height || this.defaults.height;
- 
-            this.fixtureDef.shape = new b2PolygonShape();
-            this.fixtureDef.shape.SetAsBox(details.width / 2,
-            details.height / 2);
-            break;
-    }
- 
-    this.body.CreateFixture(this.fixtureDef);
-};
- 
- 
-FlynnBody.prototype.defaults = {
-    shape: "block",
-    width: 0.4,
-    height: 0.4,
-    radius: 0.4,
-    //color: Flynn.Colors.WHITE,
-};
- 
-FlynnBody.prototype.fixtureDefaults = {
-    density: 2,
-    friction: 1,
-    // restitution: 0.2
-    restitution: 0.7,
-};
- 
-FlynnBody.prototype.definitionDefaults = {
-    active: true,
-    allowSleep: true,
-    angle: 0,
-    angularVelocity: 0,
-    awake: true,
-    bullet: false,
-    fixedRotation: false,
-};
-
-// FlynnBody.prototype.resetToHome = function(){
-//     this.SetPosition(new b2Vec2(this.details.x, this.details.y));
-//     this.SetAngle(0);
-//     this.SetLinearVelocity(new b2Vec2(0,0));
-//     this.SetAngularVelocity(0);
-// };
-
-FlynnBody.prototype.draw = function (context, scale) {
-    var pos = this.body.GetPosition();
-    var angle = this.body.GetAngle();
- 
-    // Save the context
-    context.save();
- 
-    // Translate and rotate
-    context.translate(pos.x * scale, pos.y * scale);
-    context.rotate(angle);
- 
- 
-    // Draw the shape outline if the shape has a color
-    if (this.details.color) {
-        context.fillStyle = this.details.color;
- 
-        switch (this.details.shape) {
+     
+        details.shape = details.shape || this.defaults.shape;
+        //details.color = details.color || this.defaults.color;
+     
+        switch (details.shape) {
             case "circle":
-                context.vectorStart(this.details.color);
-                var first = true;
-                for(var a=0, stop=Math.PI*2, step = Math.PI*2/6; a<=stop; a += step ){
-                    if(first){
-                        context.vectorMoveTo(Math.cos(a)*this.details.radius*scale, Math.sin(a)*this.details.radius*scale);
-                        first = false;
-                    } else {
-                        context.vectorLineTo(Math.cos(a)*this.details.radius*scale, Math.sin(a)*this.details.radius*scale);
-                    }
-                }
-                context.vectorEnd();
-
-
-                // context.beginPath();
-                // context.arc(0, 0, this.details.radius, 0, Math.PI * 2);
-                // context.fill();
+                details.radius = details.radius || this.defaults.radius;
+                this.fixtureDef.shape = new b2CircleShape(details.radius);
                 break;
             case "polygon":
-                var points = this.details.points;
-                context.beginPath();
-                context.moveTo(points[0].x, points[0].y);
-                for (var i = 1; i < points.length; i++) {
-                    context.lineTo(points[i].x, points[i].y);
-                }
-                context.fill();
+                this.fixtureDef.shape = new b2PolygonShape();
+                this.fixtureDef.shape.SetAsArray(details.points, details.points.length);
                 break;
             case "block":
-                context.vectorRect(-this.details.width / 2 * scale, -this.details.height / 2 * scale,
-                this.details.width * scale,
-                this.details.height * scale,
-                this.details.color
-                );
-
-                // context.vectorStart(this.details.color);
-                // context.vectorMoveTo(-this.details.width / 2, -this.details.height / 2);
-                // context.vectorLineTo( this.details.width / 2, -this.details.height / 2);
-                // context.vectorLineTo( this.details.width / 2,  this.details.height / 2);
-                // context.vectorLineTo(-this.details.width / 2,  this.details.height / 2);
-                // context.vectorLineTo(-this.details.width / 2, -this.details.height / 2);
-                // context.vectorEnd();
-
-                // context.fillRect(-this.details.width / 2, -this.details.height / 2,
-                // this.details.width,
-                // this.details.height
-                // );
-                break;
             default:
+                details.width = details.width || this.defaults.width;
+                details.height = details.height || this.defaults.height;
+     
+                this.fixtureDef.shape = new b2PolygonShape();
+                this.fixtureDef.shape.SetAsBox(details.width / 2,
+                details.height / 2);
                 break;
         }
-    }
-    context.restore();
-};
+    
+        this.body.CreateFixture(this.fixtureDef);
+    },
+
+    draw: function(context, scale){
+        var pos = this.body.GetPosition();
+        var angle = this.body.GetAngle();
+     
+        // Save the context
+        context.save();
+     
+        // Translate and rotate
+        context.translate(pos.x * scale, pos.y * scale);
+        context.rotate(angle);
+     
+     
+        // Draw the shape outline if the shape has a color
+        if (this.details.color) {
+            context.fillStyle = this.details.color;
+     
+            switch (this.details.shape) {
+                case "circle":
+                    context.vectorStart(this.details.color);
+                    var first = true;
+                    for(var a=0, stop=Math.PI*2, step = Math.PI*2/6; a<=stop; a += step ){
+                        if(first){
+                            context.vectorMoveTo(Math.cos(a)*this.details.radius*scale, Math.sin(a)*this.details.radius*scale);
+                            first = false;
+                        } else {
+                            context.vectorLineTo(Math.cos(a)*this.details.radius*scale, Math.sin(a)*this.details.radius*scale);
+                        }
+                    }
+                    context.vectorEnd();
+                    break;
+                case "polygon":
+                    var points = this.details.points;
+                    context.beginPath();
+                    context.moveTo(points[0].x, points[0].y);
+                    for (var i = 1; i < points.length; i++) {
+                        context.lineTo(points[i].x, points[i].y);
+                    }
+                    context.fill();
+                    break;
+                case "block":
+                    context.vectorRect(-this.details.width / 2 * scale, -this.details.height / 2 * scale,
+                    this.details.width * scale,
+                    this.details.height * scale,
+                    this.details.color
+                    );
+                    break;
+                default:
+                    break;
+            }
+        }
+        context.restore();
+    },
+});
