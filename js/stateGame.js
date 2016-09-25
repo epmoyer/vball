@@ -62,6 +62,7 @@ Game.StateGame = Flynn.State.extend({
 
     init: function(mcp) {
         var i, len;
+        var def;
 
         this._super(mcp);
         this.init_constants();
@@ -335,6 +336,8 @@ Game.StateGame = Flynn.State.extend({
     },
 
     handleInputs: function(input, paceFactor) {
+        var angle, force, center, engine_v, center_v, engine_world_v, i, len;
+        var pNum;
 
         if(this.mcp.developerModeEnabled){
             // Metrics toggle
@@ -372,7 +375,6 @@ Game.StateGame = Flynn.State.extend({
             this.soundThrust.stop();
         }
 
-        var angle, force, center, engine_v, center_v, engine_world_v, i, len;
         for(i=0, len=this.numPlayers; i<len; i++){
             pNum = 'P' + (i+1) + ' ';
             angle = this.robotBody[i].GetAngle() - Math.PI/2;
@@ -393,7 +395,7 @@ Game.StateGame = Flynn.State.extend({
             if(!rotationApplied && this.rotationDampenPending){
                 this.robotBody[i].SetAngularVelocity(0);
                 this.rotationDampenPending[i] = false;
-                console.log('dampened');
+                //console.log('dampened');
             }
 
             if(input.virtualButtonIsDown(pNum + 'thrust')){
@@ -440,15 +442,17 @@ Game.StateGame = Flynn.State.extend({
     },
 
     update: function(paceFactor) {
+        var ball_pos, x, y, i, len;
+
         if(!this.gameOver){
             this.gameClock += paceFactor;
         }
         this.physics.update(paceFactor);
 
-        var ball_pos = this.ballBody.GetPosition();
-        var x = ball_pos.x * this.RENDER_SCALE;
-        var y = ball_pos.y * this.RENDER_SCALE;
-        for(var i=0, len=this.numPlayers; i<len; i++){
+        ball_pos = this.ballBody.GetPosition();
+        x = ball_pos.x * this.RENDER_SCALE;
+        y = ball_pos.y * this.RENDER_SCALE;
+        for(i=0, len=this.numPlayers; i<len; i++){
             if( (x>this.GOAL_X[i] + this.BALL_RADIUS) &&
                 (x<this.GOAL_X[i] + this.GOAL_SIZE - this.BALL_RADIUS) &&
                 (y>this.GOAL_Y[i] + this.BALL_RADIUS) &&
@@ -461,6 +465,8 @@ Game.StateGame = Flynn.State.extend({
     },
 
     render: function(ctx){
+        var i, len;
+
         ctx.clearAll();
 
         //------------
