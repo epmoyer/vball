@@ -101,13 +101,13 @@ Game.StateGame = Flynn.State.extend({
         // Game Clock
         this.gameClock = 0;
 
-        this.physics = new FlynnPhysics(mcp.canvas.ctx, GRAVITY_X, GRAVITY_Y, RENDER_SCALE);
+        this.physics = new Flynn.Physics(mcp.canvas.ctx, GRAVITY_X, GRAVITY_Y, RENDER_SCALE);
 
         //-------------------
         // Playfield Barriers
         //-------------------
         // Left Barrier
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: (WALL_THICKNESS/2)/RENDER_SCALE,
             y: this.canvasHeight/2/RENDER_SCALE,
             height: this.canvasHeight/RENDER_SCALE,
@@ -115,7 +115,7 @@ Game.StateGame = Flynn.State.extend({
             color: BARRIER_COLOR,
             });
         // Right Barrier
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: (this.canvasWidth-WALL_THICKNESS/2)/RENDER_SCALE,
             y: this.canvasHeight/2/RENDER_SCALE,
             height: this.canvasHeight/RENDER_SCALE,
@@ -123,7 +123,7 @@ Game.StateGame = Flynn.State.extend({
             color: BARRIER_COLOR,
             });
         // Top Barrier
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: this.canvasWidth/2/RENDER_SCALE,
             y: WALL_THICKNESS/2/RENDER_SCALE,
             height: WALL_THICKNESS/RENDER_SCALE,
@@ -131,7 +131,7 @@ Game.StateGame = Flynn.State.extend({
             color: BARRIER_COLOR,
             });
         // Bottom Barrier
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: this.canvasWidth/2/RENDER_SCALE,
             y: (this.canvasHeight-WALL_THICKNESS/2)/RENDER_SCALE,
             height: WALL_THICKNESS/RENDER_SCALE,
@@ -145,7 +145,7 @@ Game.StateGame = Flynn.State.extend({
         // Bumpers
         //--------------
         // Left Bumper
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: (BUMPER_MARGIN + BUMPER_THICKNESS/2)/RENDER_SCALE,
             y: this.canvasHeight/2/RENDER_SCALE,
             height: BUMPER_LENGTH/RENDER_SCALE,
@@ -153,7 +153,7 @@ Game.StateGame = Flynn.State.extend({
             color: BUMPER_COLOR,
             });
         // // Right Bumper
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: (this.canvasWidth - BUMPER_MARGIN - BUMPER_THICKNESS/2)/RENDER_SCALE,
             y: this.canvasHeight/2/RENDER_SCALE,
             height: BUMPER_LENGTH/RENDER_SCALE,
@@ -161,7 +161,7 @@ Game.StateGame = Flynn.State.extend({
             color: BUMPER_COLOR,
             });
         // // Top Bumper
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: this.canvasWidth/2/RENDER_SCALE,
             y: (BUMPER_MARGIN + BUMPER_THICKNESS/2)/RENDER_SCALE,
             height: BUMPER_THICKNESS/RENDER_SCALE,
@@ -169,7 +169,7 @@ Game.StateGame = Flynn.State.extend({
             color: BUMPER_COLOR,
             });
         // // Bottom Bumper
-        new FlynnBody(this.physics, { type: "static",
+        new Flynn.Body(this.physics, { type: "static",
             x: this.canvasWidth/2/RENDER_SCALE,
             y: (this.canvasHeight - BUMPER_MARGIN - BUMPER_THICKNESS/2)/RENDER_SCALE,
             height: BUMPER_THICKNESS/RENDER_SCALE,
@@ -180,10 +180,10 @@ Game.StateGame = Flynn.State.extend({
 
         //var SPAWN_MARGIN = 50;
         // for(var i = 0; i<0; i++){
-        //  new FlynnBody(this.physics, {
+        //  new Flynn.Body(this.physics, {
         //      x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
         //      y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE, shape:"circle" });
-        //  new FlynnBody(this.physics, {
+        //  new Flynn.Body(this.physics, {
         //      x: (SPAWN_MARGIN +  Math.random() * (this.canvasWidth  - 2*SPAWN_MARGIN))/RENDER_SCALE,
         //      y: (SPAWN_MARGIN +  Math.random() * (this.canvasHeight - 2*SPAWN_MARGIN))/RENDER_SCALE});
         // }
@@ -196,7 +196,7 @@ Game.StateGame = Flynn.State.extend({
 
         var player;
         for(player=0, len=this.numPlayers; player<len; player++){
-            this.robotBody[player] = new FlynnBody(this.physics, {
+            this.robotBody[player] = new Flynn.Body(this.physics, {
                     x: ROBOT_START_X[player]/RENDER_SCALE,
                     y: ROBOT_START_Y[player]/RENDER_SCALE,
                     width: ROBOT_BODY_WIDTH/RENDER_SCALE,
@@ -204,7 +204,7 @@ Game.StateGame = Flynn.State.extend({
                     color: PLAYER_COLORS[player],
                     fixedRotation: true,
                 }).body;
-            this.leftArm[player] = new FlynnBody(this.physics, {
+            this.leftArm[player] = new Flynn.Body(this.physics, {
                     x: (ROBOT_START_X[player] - ROBOT_BODY_WIDTH/2 - ROBOT_ARM_WIDTH/2 - 0.1)/RENDER_SCALE,
                     y: ROBOT_START_Y[player]/RENDER_SCALE,
                     width: ROBOT_ARM_WIDTH/RENDER_SCALE,
@@ -212,7 +212,7 @@ Game.StateGame = Flynn.State.extend({
                     color: PLAYER_COLORS[player],
                     // fixedRotation: true,
                 }).body;
-            this.rightArm[player] = new FlynnBody(this.physics, {
+            this.rightArm[player] = new Flynn.Body(this.physics, {
                     x: (ROBOT_START_X[player] + ROBOT_BODY_WIDTH/2 + ROBOT_ARM_WIDTH/2 )/RENDER_SCALE,
                     y: ROBOT_START_Y[player]/RENDER_SCALE,
                     width: ROBOT_ARM_WIDTH/RENDER_SCALE,
@@ -224,8 +224,8 @@ Game.StateGame = Flynn.State.extend({
 
             def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
             def.Initialize(this.leftArm[player], this.robotBody[player],
-                new b2Vec2((ROBOT_START_X[player]-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y[player]/RENDER_SCALE),
-                new b2Vec2(0,1));
+                new Box2D.Common.Math.b2Vec2((ROBOT_START_X[player]-ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y[player]/RENDER_SCALE),
+                new Box2D.Common.Math.b2Vec2(0,1));
             def.enableLimit = true;
             def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
             def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
@@ -236,8 +236,8 @@ Game.StateGame = Flynn.State.extend({
 
             def = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
             def.Initialize(this.rightArm[player], this.robotBody[player],
-                new b2Vec2((ROBOT_START_X[player]+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y[player]/RENDER_SCALE),
-                new b2Vec2(0,1));
+                new Box2D.Common.Math.b2Vec2((ROBOT_START_X[player]+ROBOT_BODY_WIDTH/2)/RENDER_SCALE, ROBOT_START_Y[player]/RENDER_SCALE),
+                new Box2D.Common.Math.b2Vec2(0,1));
             def.enableLimit = true;
             def.lowerTranslation = (ROBOT_ARM_HEIGHT/2 - ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
             def.upperTranslation = (ROBOT_ARM_HEIGHT/2 + ROBOT_BODY_HEIGHT/2)/RENDER_SCALE;
@@ -252,7 +252,7 @@ Game.StateGame = Flynn.State.extend({
         }
 
         // Ball
-        var ball = new FlynnBody(this.physics, {
+        var ball = new Flynn.Body(this.physics, {
                 x: this.canvasWidth/2/RENDER_SCALE,
                 y: this.canvasHeight/2/RENDER_SCALE,
                 shape:"circle",
@@ -317,14 +317,14 @@ Game.StateGame = Flynn.State.extend({
             this.goalsRemaining--;
             if(this.goalsRemaining === 0){
                 this.gameOver = true;
-                this.ballBody.SetPosition(new b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
+                this.ballBody.SetPosition(new Box2D.Common.Math.b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
             }
         }
         else{
             this.score[player]++;
             if(this.score[player] >= this.numGoalsToWin2Player){
                 this.gameOver = true;
-                this.ballBody.SetPosition(new b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
+                this.ballBody.SetPosition(new Box2D.Common.Math.b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
             }
         }
         this.soundScore.play();

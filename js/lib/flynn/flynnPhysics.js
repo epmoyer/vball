@@ -1,18 +1,15 @@
+//-----------------------------------
+// flynnPhysics
+//
+//    Physics using the Box2D engine with cusom (Flynn vector) rendering
+//
+//-----------------------------------
 
-var b2Vec2 = Box2D.Common.Math.b2Vec2;
-var b2BodyDef = Box2D.Dynamics.b2BodyDef;
-var b2Body = Box2D.Dynamics.b2Body;
-var b2FixtureDef = Box2D.Dynamics.b2FixtureDef;
-var b2Fixture = Box2D.Dynamics.b2Fixture;
-var b2World = Box2D.Dynamics.b2World;
-var b2MassData = Box2D.Collision.Shapes.b2MassData;
-var b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
-var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
-var b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
-
-// Add ApplyAngularImpulse to Bod2d
-b2Body.prototype.ApplyAngularImpulse = function (impulse) {
-      if (this.m_type != b2Body.b2_dynamicBody) {
+//-----------------------------------
+// Add helper functions to Box2D.Dynamics.b2Body
+//-----------------------------------
+Box2D.Dynamics.b2Body.prototype.ApplyAngularImpulse = function (impulse) {
+      if (this.m_type != Box2D.Dynamics.b2Body.b2_dynamicBody) {
          return;
       }
       if (this.IsAwake() === false) {
@@ -21,23 +18,23 @@ b2Body.prototype.ApplyAngularImpulse = function (impulse) {
       this.m_angularVelocity += impulse;
 };
 
-b2Body.prototype.setHome = function () {
+Box2D.Dynamics.b2Body.prototype.setHome = function () {
     var pos = this.GetPosition();
-    this.home_pos = new b2Vec2(pos.x, pos.y);
+    this.home_pos = new Box2D.Common.Math.b2Vec2(pos.x, pos.y);
 };
 
-b2Body.prototype.resetToHome = function () {
+Box2D.Dynamics.b2Body.prototype.resetToHome = function () {
     this.SetPosition(this.home_pos);
     this.SetAngle(0);
-    this.SetLinearVelocity(new b2Vec2(0,0));
+    this.SetLinearVelocity(new Box2D.Common.Math.b2Vec2(0,0));
     this.SetAngularVelocity(0);
 };
 
-var FlynnPhysics= Class.extend({
+Flynn.Physics= Class.extend({
     init: function(ctx, gravity_x, gravity_y, render_scale){
 
-        var gravity = new b2Vec2(gravity_x, gravity_y);
-        this.world = new b2World(gravity, true);
+        var gravity = new Box2D.Common.Math.b2Vec2(gravity_x, gravity_y);
+        this.world = new Box2D.Dynamics.b2World(gravity, true);
         this.context = ctx;
         this.scale = render_scale;
         this.dtRemaining = 0;
@@ -47,12 +44,12 @@ var FlynnPhysics= Class.extend({
     },
 
     enableDebugDraw: function() {
-        this.debugDraw = new b2DebugDraw();
+        this.debugDraw = new Box2D.Dynamics.b2DebugDraw();
         this.debugDraw.SetSprite(this.context);
         this.debugDraw.SetDrawScale(this.scale);
         this.debugDraw.SetFillAlpha(0.3);
         this.debugDraw.SetLineThickness(1.0);
-        this.debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+        this.debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_jointBit);
         this.world.SetDebugDraw(this.debugDraw);
     },
 
@@ -106,7 +103,7 @@ var FlynnPhysics= Class.extend({
     },
 });
 
-var FlynnBody= Class.extend({
+Flynn.Body= Class.extend({
 
     defaults: {
         shape: "block",
@@ -136,22 +133,22 @@ var FlynnBody= Class.extend({
         this.details = details = details || {};
      
         // Create the definition
-        this.definition = new b2BodyDef();
+        this.definition = new Box2D.Dynamics.b2BodyDef();
      
         // Set up the definition
         for (var k in this.definitionDefaults) {
             this.definition[k] = details[k] || this.definitionDefaults[k];
         }
-        this.definition.position = new b2Vec2(details.x || 0, details.y || 0);
-        this.definition.linearVelocity = new b2Vec2(details.vx || 0, details.vy || 0);
+        this.definition.position = new Box2D.Common.Math.b2Vec2(details.x || 0, details.y || 0);
+        this.definition.linearVelocity = new Box2D.Common.Math.b2Vec2(details.vx || 0, details.vy || 0);
         this.definition.userData = this;
-        this.definition.type = details.type == "static" ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
+        this.definition.type = details.type == "static" ? Box2D.Dynamics.b2Body.b2_staticBody : Box2D.Dynamics.b2Body.b2_dynamicBody;
      
         // Create the Body
         this.body = physics.world.CreateBody(this.definition);
      
         // Create the fixture
-        this.fixtureDef = new b2FixtureDef();
+        this.fixtureDef = new Box2D.Dynamics.b2FixtureDef();
         for (var l in this.fixtureDefaults) {
             this.fixtureDef[l] = details[l] || this.fixtureDefaults[l];
         }
@@ -162,10 +159,10 @@ var FlynnBody= Class.extend({
         switch (details.shape) {
             case "circle":
                 details.radius = details.radius || this.defaults.radius;
-                this.fixtureDef.shape = new b2CircleShape(details.radius);
+                this.fixtureDef.shape = new Box2D.Collision.Shapes.b2CircleShape(details.radius);
                 break;
             case "polygon":
-                this.fixtureDef.shape = new b2PolygonShape();
+                this.fixtureDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();
                 this.fixtureDef.shape.SetAsArray(details.points, details.points.length);
                 break;
             case "block":
@@ -173,7 +170,7 @@ var FlynnBody= Class.extend({
                 details.width = details.width || this.defaults.width;
                 details.height = details.height || this.defaults.height;
      
-                this.fixtureDef.shape = new b2PolygonShape();
+                this.fixtureDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();
                 this.fixtureDef.shape.SetAsBox(details.width / 2,
                 details.height / 2);
                 break;
