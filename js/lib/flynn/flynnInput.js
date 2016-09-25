@@ -183,9 +183,9 @@ Flynn.InputHandler = Class.extend({
             this.addUiButton('UI_enter',  Flynn.KeyboardMap['enter']);
             this.addUiButton('UI_escape', Flynn.KeyboardMap['escape']);
             this.addUiButton('UI_exit',   Flynn.KeyboardMap['tab']);
-            this.addUiButton('UI_quarter',Flynn.KeyboardMap['5']);
-            this.addUiButton('UI_start1', Flynn.KeyboardMap['1']);
-            this.addUiButton('UI_start2', Flynn.KeyboardMap['2']);
+            this.addUiButton('UI_quarter',Flynn.KeyboardMap['num_5']);
+            this.addUiButton('UI_start1', Flynn.KeyboardMap['num_1']);
+            this.addUiButton('UI_start2', Flynn.KeyboardMap['num_2']);
 
             this.addUiButton('UI_up',     Flynn.KeyboardMap['up']);
             this.addUiButton('UI_down',   Flynn.KeyboardMap['down']);
