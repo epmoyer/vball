@@ -7,8 +7,8 @@ Flynn.StateEnd = Flynn.State.extend({
 
     CURSOR_BLINK_RATE: 2,
 
-    init: function(mcp, score, leaderboard, color, title, prompt, parentState) {
-        this._super(mcp);
+    init: function(score, leaderboard, color, title, prompt, parentState) {
+        this._super();
 
         this.score = score;
         this.leaderboard = leaderboard;
@@ -45,12 +45,12 @@ Flynn.StateEnd = Flynn.State.extend({
 
     handleInputs: function(input, paceFactor) {
         if (this.hasEnteredName) {
-            if (input.virtualButtonIsPressed("UI_enter")) {
+            if (input.virtualButtonWasPressed("UI_enter")) {
                 // Exit back to the parent state
-                this.mcp.nextState = this.parentState;
+                Flynn.mcp.changeState(this.parentState);
             }
         } else {
-            if (input.virtualButtonIsPressed("UI_enter")) {
+            if (input.virtualButtonWasPressed("UI_enter")) {
                 // take sate to next stage
                 this.hasEnteredName = true;
                 this.namefield.blur();
@@ -91,8 +91,8 @@ Flynn.StateEnd = Flynn.State.extend({
             ctx.vectorText(this.title, 4, null, 130, null, this.color);
             for (var i = 0, len = this.leaderboard.leaderList.length; i < len; i++) {
                 var leader = this.leaderboard.leaderList[i];
-                ctx.vectorText(leader['name'], 2, 360, 200+25*i, null, this.color);
-                ctx.vectorText(this.scoreToString(leader['score']), 2, 550, 200+25*i,   10, this.color);
+                ctx.vectorText(leader['name'], 2, 360, 200+25*i, 'left', this.color);
+                ctx.vectorText(this.scoreToString(leader['score']), 2, 660, 200+25*i,'right', this.color);
             }
             ctx.vectorText("PRESS <ENTER> TO CONTINUE", 2, null, 450, null, this.color);
 

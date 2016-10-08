@@ -5,8 +5,8 @@
 
 Flynn.StateConfig = Flynn.State.extend({
 
-    init: function(mcp, mainTextColor, menuTextColor, selectionBoxColor, menuPromptColor, parentState){
-        this._super(mcp);
+    init: function(mainTextColor, menuTextColor, selectionBoxColor, menuPromptColor, parentState){
+        this._super();
 
         this.OPTION_SELECTION_MARGIN = 5;
         this.OPTION_SELECTION_MARGININ_SET = 2;
@@ -29,14 +29,11 @@ Flynn.StateConfig = Flynn.State.extend({
         this.selectionBoxColor = selectionBoxColor;
         this.menuPromptColor = menuPromptColor;
 
-        this.canvasWidth = mcp.canvas.ctx.width;
-        this.canvasHeight = mcp.canvas.ctx.height;
-
-        this.configurableVirtualButtonNames = this.mcp.input.getConfigurableVirtualButtonNames();
+        this.configurableVirtualButtonNames = Flynn.mcp.input.getConfigurableVirtualButtonNames();
 
         this.keyAssignmentInProgress = false;
 
-        this.optionKeyNames = mcp.optionManager.getOptionKeyNames();
+        this.optionKeyNames = Flynn.mcp.optionManager.getOptionKeyNames();
         this.numOptions = this.optionKeyNames.length;
         this.selectedLineIndex = 0;
     },
@@ -49,10 +46,10 @@ Flynn.StateConfig = Flynn.State.extend({
             if (capturedKeyCode){
                 if(!input.isKeyCodeAssigned(capturedKeyCode)){
                     // The chosen keyCode is available.  Assign it.
-                    this.mcp.optionManager.setOption(optionKeyName, capturedKeyCode);
+                    Flynn.mcp.optionManager.setOption(optionKeyName, capturedKeyCode);
                     this.keyAssignmentInProgress = false;
                 } else{
-                    currentlyAssignedKeyCode = this.mcp.optionManager.getOption(optionKeyName);
+                    currentlyAssignedKeyCode = Flynn.mcp.optionManager.getOption(optionKeyName);
                     if (currentlyAssignedKeyCode === capturedKeyCode){
                         // User pressed the key which was already assigned.  Do nothing.
                         this.keyAssignmentInProgress = false;
@@ -65,41 +62,41 @@ Flynn.StateConfig = Flynn.State.extend({
                 }
             }
 
-            if (input.virtualButtonIsPressed("UI_escape")) {
+            if (input.virtualButtonWasPressed("UI_escape")) {
                 this.keyAssignmentInProgress = false;
             }
             return;
         }
         
-        var optionDescriptor = this.mcp.optionManager.optionDescriptors[this.optionKeyNames[this.selectedLineIndex]];
+        var optionDescriptor = Flynn.mcp.optionManager.optionDescriptors[this.optionKeyNames[this.selectedLineIndex]];
 
-        if(this.mcp.arcadeModeEnabled) {
-            if (input.virtualButtonIsPressed("quarter")) {
-                this.mcp.credits += 1;
+        if(Flynn.mcp.arcadeModeEnabled) {
+            if (input.virtualButtonWasPressed("quarter")) {
+                Flynn.mcp.credits += 1;
                 this.insert_coin_sound.play();
             }
         }
-        if (input.virtualButtonIsPressed("UI_escape")) {
+        if (input.virtualButtonWasPressed("UI_escape")) {
             // Exit back to the parent state
-            this.mcp.nextState = this.parentState;
+            Flynn.mcp.changeState(this.parentState);
         }
-        if (input.virtualButtonIsPressed("UI_down")) {
+        if (input.virtualButtonWasPressed("UI_down")) {
             ++this.selectedLineIndex;
             if(this.selectedLineIndex >= this.numOptions){
                 this.selectedLineIndex = 0;
             }
         }
-        if (input.virtualButtonIsPressed("UI_up")) {
+        if (input.virtualButtonWasPressed("UI_up")) {
             --this.selectedLineIndex;
             if(this.selectedLineIndex < 0){
                 this.selectedLineIndex = this.numOptions-1;
             }
         }
-        if (input.virtualButtonIsPressed("UI_enter")) {
+        if (input.virtualButtonWasPressed("UI_enter")) {
             switch(optionDescriptor.type){
                 case Flynn.OptionType.BOOLEAN:
                     // Toggle boolean
-                    this.mcp.optionManager.setOption(optionDescriptor.keyName, !optionDescriptor.currentValue);
+                    Flynn.mcp.optionManager.setOption(optionDescriptor.keyName, !optionDescriptor.currentValue);
                     break;
 
                 case Flynn.OptionType.INPUT_KEY:
@@ -116,10 +113,10 @@ Flynn.StateConfig = Flynn.State.extend({
             }
         }
         var optionIndexDelta = 0;
-        if (input.virtualButtonIsPressed("UI_left")) {
+        if (input.virtualButtonWasPressed("UI_left")) {
             optionIndexDelta = -1;
         }
-        if (input.virtualButtonIsPressed("UI_right")) {
+        if (input.virtualButtonWasPressed("UI_right")) {
             optionIndexDelta = 1;
         }
         if(optionIndexDelta !== 0){
@@ -132,7 +129,7 @@ Flynn.StateConfig = Flynn.State.extend({
                 } else if (currentPromptIndex > numOptions-1){
                     currentPromptIndex = 0;
                 }
-                this.mcp.optionManager.setOption(optionDescriptor.keyName, optionDescriptor.promptValues[currentPromptIndex][1]);
+                Flynn.mcp.optionManager.setOption(optionDescriptor.keyName, optionDescriptor.promptValues[currentPromptIndex][1]);
             }
         }
 
@@ -158,7 +155,7 @@ Flynn.StateConfig = Flynn.State.extend({
         var names = this.configurableVirtualButtonNames;
         
         var menu_top_y = 250;
-        var menu_center_x = this.canvasWidth/2;
+        var menu_center_x = Flynn.mcp.canvasWidth/2;
         var menu_line_height = 30;
 
         var lineSelectionBox = {x:0, y:0, width:0, height:0};
@@ -166,7 +163,7 @@ Flynn.StateConfig = Flynn.State.extend({
         var textWidth;
         for (var i=0, len=this.optionKeyNames.length; i<len; i++){
             var optionKeyName = this.optionKeyNames[i];
-            var optionDescriptor = this.mcp.optionManager.optionDescriptors[optionKeyName];
+            var optionDescriptor = Flynn.mcp.optionManager.optionDescriptors[optionKeyName];
 
             // Render option prompt text
             switch(optionDescriptor.type){
@@ -179,7 +176,7 @@ Flynn.StateConfig = Flynn.State.extend({
 
                     textWidth = (optionDescriptor.promptText.length * Flynn.Font.CharacterSpacing - Flynn.Font.CharacterGap) * this.OPTION_TEXT_SCALE;
                     lineSelectionBox = {
-                        x: this.canvasWidth/2 - textWidth/2 - this.OPTION_SELECTION_MARGIN,
+                        x: Flynn.mcp.canvasWidth/2 - textWidth/2 - this.OPTION_SELECTION_MARGIN,
                         y: menu_top_y + menu_line_height * i - this.OPTION_SELECTION_MARGIN,
                         width: textWidth + this.OPTION_SELECTION_MARGIN * 2,
                         height: Flynn.Font.CharacterHeight * this.OPTION_TEXT_SCALE + this.OPTION_SELECTION_MARGIN * 2};
@@ -190,7 +187,7 @@ Flynn.StateConfig = Flynn.State.extend({
                         optionDescriptor.promptText + ':',
                         2, menu_center_x - this.OPTION_CENTER_GAP_WIDTH/2,
                         menu_top_y + menu_line_height * i,
-                        0, this.menuTextColor);
+                        'right', this.menuTextColor);
                     break;
             }
 
@@ -248,7 +245,7 @@ Flynn.StateConfig = Flynn.State.extend({
                         valueColor = this.menuPromptColor;
                     }
                     else{
-                        valueText = this.mcp.input.keyCodeToKeyName(keyCode);
+                        valueText = Flynn.mcp.input.keyCodeToKeyName(keyCode);
                     }
                     lineSelectionBox = {
                         x: menu_center_x + this.OPTION_CENTER_GAP_WIDTH/2 - this.OPTION_SELECTION_MARGIN,
@@ -262,7 +259,7 @@ Flynn.StateConfig = Flynn.State.extend({
                 valueText,
                 2, menu_center_x + this.OPTION_CENTER_GAP_WIDTH/2,
                 menu_top_y + menu_line_height * i,
-                null, valueColor);
+                'left', valueColor);
             if(i === this.selectedLineIndex){
                 selectionBox = lineSelectionBox;
             }
