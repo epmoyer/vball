@@ -84,7 +84,7 @@ Game.StateMenu = Flynn.State.extend({
         var x_pos = Game.CANVAS_WIDTH /2;
         var y_pos = 14;
         ctx.vectorText(title, 10, x_pos, y_pos, 'center', Flynn.Colors.CYAN, is_world, Flynn.Font.Block);
-        ctx.vectorText(title, 10,  x_pos + 3, y_pos +3, 'center', Flynn.Colors.MAGENTA, is_world, Flynn.Font.Block);
+        ctx.vectorText(title, 10,  x_pos + 3, y_pos +3, 'center', Flynn.Colors.GREEN, is_world, Flynn.Font.Block);
 
         // for (var angle = 0; angle < Math.PI + 0.1; angle += Math.PI) {
         //     var x_pos = 350;
