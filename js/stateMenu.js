@@ -2,9 +2,9 @@
 // StateMenu class
 //    Startup screen
 //--------------------------------------------
-if (typeof Game == "undefined") {
-   var Game = {};  // Create namespace
-}
+var Game = Game || {}; // Create namespace
+
+(function () { "use strict";
 
 Game.StateMenu = Flynn.State.extend({
 
@@ -170,8 +170,8 @@ Game.StateMenu = Flynn.State.extend({
         if(Flynn.mcp.backEnabled){
             ctx.vectorText('PRESS <TAB> TO EXIT GAME', 1.5, null, 730, null, Flynn.Colors.CYAN);
         }
-
         Flynn.mcp.renderLogo(ctx);
     }
-
 });
+
+}()); // "use strict" wrapper

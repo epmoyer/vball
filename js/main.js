@@ -1,6 +1,6 @@
-if (typeof Game == "undefined") {
-   var Game = {};  // Create namespace
-}
+var Game = Game || {}; // Create namespace
+
+(function () { "use strict";
 
 Game.VERSION = '0.5';
 Game.CANVAS_HEIGHT = 768;
@@ -35,7 +35,7 @@ Game.Main = Class.extend({
                         return new Game.StateGame();
                     case Game.States.END:
                         var newState = new Flynn.StateEnd(
-                            self.mcp.custom.score,
+                            self.mcp.custom.score.time,
                             self.mcp.custom.leaderboard,
                             Flynn.Colors.CYAN,
                             'BEST TIMES',
@@ -58,19 +58,27 @@ Game.Main = Class.extend({
         Flynn.mcp.changeState(Game.States.MENU);
 
         Game.config = {};
-        Game.config.score = 0;
+        Game.config.score = {
+            // Scoring for 2 player games
+            goals: [   
+                0, // player 1
+                0  // player 2
+            ],
+            // Scoring for 1 player games
+            time: 0
+        };
         Game.config.leaderboard = new Flynn.Leaderboard(
-            ['name', 'score'],  // attributeList
+            ['name', 'time'],    // attributeList
             5,                  // maxItems
             false               // sortDescending
             );
         Game.config.leaderboard.setDefaultList(
             [
-                {'name': 'FIENDFODDER', 'score': 120*60},
-                {'name': 'ROCKEM',      'score': 128*60},
-                {'name': 'SOCKEM',      'score': 130*60},
-                {'name': 'BECKAM',      'score': 160*60},
-                {'name': 'ALI',         'score': 170*60},
+                {'name': 'FIENDFODDER', 'time': 120*60},
+                {'name': 'ROCKEM',      'time': 128*60},
+                {'name': 'SOCKEM',      'time': 130*60},
+                {'name': 'BECKAM',      'time': 160*60},
+                {'name': 'ALI',         'time': 170*60},
             ]);
         Game.config.leaderboard.loadFromCookies();
         Game.config.leaderboard.saveToCookies();
@@ -160,3 +168,5 @@ Game.Main = Class.extend({
         Flynn.mcp.run();
     }
 });
+
+}()); // "use strict" wrapper

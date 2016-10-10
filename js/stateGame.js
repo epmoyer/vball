@@ -2,9 +2,9 @@
 // StateGame class
 //    Core gameplay
 //--------------------------------------------
-if (typeof Game == "undefined") {
-   var Game = {};  // Create namespace
-}
+var Game = Game || {}; // Create namespace
+
+(function () { "use strict";
 
 Game.StateGame = Flynn.State.extend({
 
@@ -12,7 +12,7 @@ Game.StateGame = Flynn.State.extend({
     GRAVITY_Y: 0.0,     
     RENDER_SCALE: 100, // 100 pixels == 1 meter
 
-    PLAYER_COLORS: [Flynn.Colors.BLUE, Flynn.Colors.RED],
+    PLAYER_COLORS: [Flynn.Colors.DODGERBLUE, Flynn.Colors.RED],
 
     PUNCH_EXTEND_SPEED: 8.0,
     PUNCH_RETRACT_SPEED: 2.0,
@@ -70,7 +70,8 @@ Game.StateGame = Flynn.State.extend({
         this.center_y = Game.CANVAS_HEIGHT/2;
 
         this.numGoalsToWin2Player = 3;
-        this.score = [0,0];
+        Game.config.score.time  = 0;       // 1 player score
+        Game.config.score.goals = [0,0];   // 2 player scores
         this.numPlayers = Flynn.mcp.numPlayers;
 
         this.gameOver = false;
@@ -78,7 +79,6 @@ Game.StateGame = Flynn.State.extend({
         this.viewport_v = new Victor(0,0);
 
         this.goalsRemaining = 3;
-        this.highscore = Flynn.mcp.highscores[0][1];
         this.rotationDampenPending = [false, false];
         this.thrusting = [false, false];
     
@@ -101,9 +101,6 @@ Game.StateGame = Flynn.State.extend({
         for(i=0, len=names.length; i<len; i++){
             this.controls.push(names[i] + ' : ' + Flynn.mcp.input.getVirtualButtonBoundKeyName(names[i]));
         }
-
-        // Game Clock
-        this.gameClock = 0;
 
         this.physics = new Flynn.Physics(Flynn.mcp.canvas.ctx, this.GRAVITY_X, this.GRAVITY_Y, this.RENDER_SCALE);
 
@@ -312,8 +309,8 @@ Game.StateGame = Flynn.State.extend({
 
     scoreGoal: function(player){
         // Update highscore if exceeded
-        // if (this.gameClock < this.highscore){
-        //  this.highscore = this.gameClock;
+        // if (Game.config.score.time < this.highscore){
+        //  this.highscore = Game.config.score.time;
         // }
         if(this.numPlayers === 1){
             this.goalsRemaining--;
@@ -323,8 +320,8 @@ Game.StateGame = Flynn.State.extend({
             }
         }
         else{
-            this.score[player]++;
-            if(this.score[player] >= this.numGoalsToWin2Player){
+            Game.config.score.goals[player]++;
+            if(Game.config.score.goals[player] >= this.numGoalsToWin2Player){
                 this.gameOver = true;
                 this.ballBody.SetPosition(new Box2D.Common.Math.b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
             }
@@ -367,9 +364,13 @@ Game.StateGame = Flynn.State.extend({
         }
 
         if (this.gameOver && input.virtualButtonWasPressed("UI_enter")){
-            Flynn.mcp.changeState(States.END);
-            Flynn.mcp.custom.score = this.gameClock;
             this.soundThrust.stop();
+            if(this.numPlayers==1){
+                Flynn.mcp.changeState(Game.States.END);
+            }
+            else{
+                Flynn.mcp.changeState(Game.States.MENU);
+            }
         }
 
         for(i=0, len=this.numPlayers; i<len; i++){
@@ -381,15 +382,15 @@ Game.StateGame = Flynn.State.extend({
             var rotationApplied = false;
             if(input.virtualButtonIsDown(pNum + 'left')){
                 this.robotBody[i].SetAngularVelocity(-this.ROBOT_ROTATE_RATE);
-                this.rotationDampenPending = true;
+                this.rotationDampenPending[i] = true;
                 rotationApplied = true;
             }
             if(input.virtualButtonIsDown(pNum + 'right')){
                 this.robotBody[i].SetAngularVelocity(this.ROBOT_ROTATE_RATE);
-                this.rotationDampenPending = true;
+                this.rotationDampenPending[i] = true;
                 rotationApplied = true;
             }
-            if(!rotationApplied && this.rotationDampenPending){
+            if(!rotationApplied && this.rotationDampenPending[i]){
                 this.robotBody[i].SetAngularVelocity(0);
                 this.rotationDampenPending[i] = false;
                 //console.log('dampened');
@@ -442,7 +443,7 @@ Game.StateGame = Flynn.State.extend({
         var ball_pos, x, y, i, len;
 
         if(!this.gameOver){
-            this.gameClock += paceFactor;
+            Game.config.score.time += paceFactor;
         }
         this.physics.update(paceFactor);
 
@@ -471,12 +472,12 @@ Game.StateGame = Flynn.State.extend({
         //------------
         if(this.numPlayers === 1){
             ctx.vectorText('GOALS REMAIING: ' + this.goalsRemaining, 2, Game.CANVAS_WIDTH-230, 30, 'left', Flynn.Colors.YELLOW);
-            ctx.vectorText('TIME ' + Flynn.Util.ticksToTime(this.gameClock),
+            ctx.vectorText('TIME ' + Flynn.Util.ticksToTime(Game.config.score.time),
                 2, Game.CANVAS_WIDTH-180, 50, 'left', Flynn.Colors.YELLOW);
         }
         else{
-            ctx.vectorText(this.score[0], 3, 30, 30, 'left', this.PLAYER_COLORS[0]);
-            ctx.vectorText(this.score[1], 3, Game.CANVAS_WIDTH-30, 30, 'right', this.PLAYER_COLORS[1]);
+            ctx.vectorText(Game.config.score.goals[0], 3, 30, 30, 'left', this.PLAYER_COLORS[0]);
+            ctx.vectorText(Game.config.score.goals[1], 3, Game.CANVAS_WIDTH-30, 30, 'right', this.PLAYER_COLORS[1]);
         }
 
         for(i=0, len=this.numPlayers; i<len; i++){
@@ -493,3 +494,5 @@ Game.StateGame = Flynn.State.extend({
         }
     }
 });
+
+}()); // "use strict" wrapper
