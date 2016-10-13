@@ -45,6 +45,7 @@ Game.StateGame = Flynn.State.extend({
     BUMPER_COLOR: Flynn.Colors.GRAY,
 
     BOUNCE_LOCKOUT_TICKS: 15,
+    BOUNCE_MIN_MAGNITUDE: 0.02,
 
     init_constants: function(){
         // Constants requiring dynamic initialization
@@ -252,10 +253,11 @@ Game.StateGame = Flynn.State.extend({
         ball.contact = function (contact, impulse, first) {
             var magnitude = Math.sqrt(
                 impulse.normalImpulses[0] * impulse.normalImpulses[0] + impulse.normalImpulses[1] * impulse.normalImpulses[1]);
-
-            if (magnitude > 0.020 && !Flynn.mcp.timers.isRunning('bounceLockout')){
+            console.log("Bounce magnitude:" + magnitude);   
+            if (magnitude > self.BOUNCE_MIN_MAGNITUDE && !Flynn.mcp.timers.isRunning('bounceLockout')){
                 Game.sounds.bounce.play();
-                Flynn.mcp.timers.set('bounceLockout', this.BOUNCE_LOCKOUT_TICKS);
+                
+                Flynn.mcp.timers.set('bounceLockout', self.BOUNCE_LOCKOUT_TICKS);
             }
             
         };
