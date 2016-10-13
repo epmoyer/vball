@@ -81,20 +81,6 @@ Game.StateGame = Flynn.State.extend({
         this.goalsRemaining = 3;
         this.rotationDampenPending = [false, false];
         this.thrusting = [false, false];
-    
-        this.soundBounce = new Howl({
-            src: ['sounds/Blocked.ogg','sounds/Blocked.mp3'],
-            volume: 0.5,
-        });
-        this.soundScore = new Howl({
-            src: ['sounds/Tripple_blip.ogg','sounds/Tripple_blip.mp3'],
-            volume: 0.5,
-        });
-        this.soundThrust = new Howl({
-            src: ['sounds/Engine.ogg','sounds/Engine.mp3'],
-            volume: 0.5,
-            loop: true,
-        });
 
         var names = Flynn.mcp.input.getConfigurableVirtualButtonNames();
         this.controls = [];
@@ -268,7 +254,7 @@ Game.StateGame = Flynn.State.extend({
                 impulse.normalImpulses[0] * impulse.normalImpulses[0] + impulse.normalImpulses[1] * impulse.normalImpulses[1]);
 
             if (magnitude > 0.020 && !Flynn.mcp.timers.isRunning('bounceLockout')){
-                self.soundBounce.play();
+                Game.sounds.bounce.play();
                 Flynn.mcp.timers.set('bounceLockout', this.BOUNCE_LOCKOUT_TICKS);
             }
             
@@ -294,7 +280,7 @@ Game.StateGame = Flynn.State.extend({
     },
 
     destructor: function(){
-        this.soundThrust.stop();
+        Game.sounds.thrust.stop();
     },
 
     resetLevel: function(){
@@ -326,7 +312,7 @@ Game.StateGame = Flynn.State.extend({
                 this.ballBody.SetPosition(new Box2D.Common.Math.b2Vec2(100,100)); //TODO: Do this better.  Moving off screen for now.
             }
         }
-        this.soundScore.play();
+        Game.sounds.score.play();
     },
 
     handleInputs: function(input, paceFactor) {
@@ -364,7 +350,7 @@ Game.StateGame = Flynn.State.extend({
         }
 
         if (this.gameOver && input.virtualButtonWasPressed("UI_enter")){
-            this.soundThrust.stop();
+            Game.sounds.thrust.stop();
             if(this.numPlayers==1){
                 Flynn.mcp.changeState(Game.States.END);
             }
@@ -400,12 +386,12 @@ Game.StateGame = Flynn.State.extend({
                 this.robotBody[i].ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
                 if(!this.thrusting[0] && !this.thrusting[1]){
                     this.thrusting[i]=true;
-                    this.soundThrust.play();
+                    Game.sounds.thrust.play();
                 }
             } else{
                 this.thrusting[i]=false;
                 if(!this.thrusting[0] && !this.thrusting[1]){
-                    this.soundThrust.stop();
+                    Game.sounds.thrust.stop();
                 }
             }
 

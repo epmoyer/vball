@@ -10,15 +10,6 @@ Game.StateMenu = Flynn.State.extend({
 
     init: function(){
 
-        this.start_sound = new Howl({
-            src: ['sounds/Tripple_blip.ogg','sounds/Tripple_blip.mp3'],
-            volume: 0.5
-        });
-
-        this.insert_coin_sound = new Howl({
-            src: ['sounds/InsertCoin.ogg','sounds/InsertCoin.mp3'],
-            volume: 0.5
-        });
     },
 
     handleInputs: function(input, paceFactor) {
@@ -41,7 +32,7 @@ Game.StateMenu = Flynn.State.extend({
         if(Flynn.mcp.arcadeModeEnabled) {
             if (input.virtualButtonWasPressed("UI_quarter")) {
                 Flynn.mcp.credits += 1;
-                this.insert_coin_sound.play();
+                Game.sounds.insert_coin.play();
             }
         }
 
@@ -51,7 +42,7 @@ Game.StateMenu = Flynn.State.extend({
             Flynn.mcp.credits -= 1;
             Flynn.mcp.changeState(Game.States.GAME);
             Flynn.mcp.numPlayers = 1;
-            this.start_sound.play();
+            Game.sounds.start_game.play();
         }
         if (  ( !Flynn.mcp.arcadeModeEnabled && input.virtualButtonWasPressed("UI_enter")) ||
             ( Flynn.mcp.arcadeModeEnabled && (Flynn.mcp.credits > 1) && input.virtualButtonWasPressed("UI_start2")))
@@ -59,7 +50,7 @@ Game.StateMenu = Flynn.State.extend({
             Flynn.mcp.credits -= 2;
             Flynn.mcp.changeState(Game.States.GAME);
             Flynn.mcp.numPlayers = 2;
-            this.start_sound.play();
+            Game.sounds.start_game.play();
         }
 
         if (input.virtualButtonWasPressed("UI_escape")) {
