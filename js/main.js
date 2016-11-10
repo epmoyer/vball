@@ -29,13 +29,19 @@ Game.Main = Class.extend({
             function(state){
                 switch(state){
                     case Game.States.MENU:
+                        Game.state_game = null;
                         return new Game.StateMenu();
                     case Game.States.GAME:
-                        return new Game.StateGame();
+                        if(!Game.state_game){
+                            // Start new game
+                            Game.state_game = new Game.StateGame();
+                        }
+                        return Game.state_game;
                     case Game.States.END:
+                        Game.state_game = null;
                         var newState = new Flynn.StateEnd(
-                            self.mcp.custom.score.time,
-                            self.mcp.custom.leaderboard,
+                            Game.config.score.time,
+                            Game.config.leaderboard,
                             Flynn.Colors.CYAN,
                             'BEST TIMES',
                             'YOUR TIME IS AMONG THE BEST!',
@@ -49,7 +55,9 @@ Game.Main = Class.extend({
                             Flynn.Colors.YELLOW,
                             Flynn.Colors.CYAN,
                             Flynn.Colors.MAGENTA,
-                            Game.States.MENU
+                            Game.state_game ? Game.States.GAME : Game.States.MENU, // Parent state
+                            Game.States.MENU,         // Abort state
+                            Game.state_game !== null  // Abort enable
                             );
                 }
             }
@@ -67,17 +75,17 @@ Game.Main = Class.extend({
             time: 0
         };
         Game.config.leaderboard = new Flynn.Leaderboard(
-            ['name', 'time'],    // attributeList
+            ['name', 'score'],   // attributeList
             5,                  // maxItems
             false               // sortDescending
             );
         Game.config.leaderboard.setDefaultList(
             [
-                {'name': 'FIENDFODDER', 'time': 120*60},
-                {'name': 'ROCKEM',      'time': 128*60},
-                {'name': 'SOCKEM',      'time': 130*60},
-                {'name': 'BECKAM',      'time': 160*60},
-                {'name': 'ALI',         'time': 170*60},
+                {'name': 'FIENDFODDER', 'score': 120*60},
+                {'name': 'ROCKEM',      'score': 128*60},
+                {'name': 'SOCKEM',      'score': 130*60},
+                {'name': 'BECKAM',      'score': 160*60},
+                {'name': 'ALI',         'score': 170*60},
             ]);
         Game.config.leaderboard.loadFromCookies();
         Game.config.leaderboard.saveToCookies();

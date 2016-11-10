@@ -361,6 +361,11 @@ Game.StateGame = Flynn.State.extend({
             }
         }
 
+        // Config
+        if (input.virtualButtonWasPressed("UI_escape")){
+            Flynn.mcp.changeState(Game.States.CONFIG);
+        }
+
         for(i=0, len=this.numPlayers; i<len; i++){
             pNum = 'P' + (i+1) + ' ';
             angle = this.robotBody[i].GetAngle() - Math.PI/2;
