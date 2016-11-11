@@ -47,17 +47,17 @@ Game.StateMenu = Flynn.State.extend({
             }
         }
 
-        if (  ( !Flynn.mcp.arcadeModeEnabled && input.virtualButtonWasPressed("UI_enter")) ||
-            ( Flynn.mcp.arcadeModeEnabled && (Flynn.mcp.credits > 0) && input.virtualButtonWasPressed("UI_start1")))
-        {
+        if ( input.virtualButtonWasPressed("UI_start1")
+             && ( !Flynn.mcp.arcadeModeEnabled 
+                  || ( Flynn.mcp.arcadeModeEnabled && (Flynn.mcp.credits > 0)))){
             Flynn.mcp.credits -= 1;
             Flynn.mcp.changeState(Game.States.GAME);
             Flynn.mcp.numPlayers = 1;
             Game.sounds.start_game.play();
         }
-        if (  ( !Flynn.mcp.arcadeModeEnabled && input.virtualButtonWasPressed("UI_enter")) ||
-            ( Flynn.mcp.arcadeModeEnabled && (Flynn.mcp.credits > 1) && input.virtualButtonWasPressed("UI_start2")))
-        {
+        if ( input.virtualButtonWasPressed("UI_start2")
+             && ( !Flynn.mcp.arcadeModeEnabled 
+                  || ( Flynn.mcp.arcadeModeEnabled && (Flynn.mcp.credits > 0)))){
             Flynn.mcp.credits -= 2;
             Flynn.mcp.changeState(Game.States.GAME);
             Flynn.mcp.numPlayers = 2;
@@ -116,7 +116,12 @@ Game.StateMenu = Flynn.State.extend({
                 }
                 else {
                     if (!Flynn.mcp.browserSupportsTouch) {
-                        startText = "PRESS <ENTER> TO START";
+                        startText = 
+                            "PRESS 1 FOR ONE PLAYER START" +
+                            // Game.get_keyname('UI_start1') + 
+                            "     " +
+                            "PRESS 2 FOR TWO PLAYER START";
+                            // Game.get_keyname('UI_start2');
                         // controlsText1 =
                         //     "PUNCH  LEFT:" +
                         //     Flynn.mcp.input.getVirtualButtonBoundKeyName("punch left") +
@@ -172,7 +177,7 @@ Game.StateMenu = Flynn.State.extend({
                 ctx.vectorText("PUT THE BALL IN THE THING!", 3, null, 500, null, Flynn.Colors.CYAN);
                 ctx.vectorText("A BOX2D THRUST/PUNCH TECH DEMO", 1.5, null, 530, null, Flynn.Colors.CYAN);
 
-                ctx.vectorText("WRITTEN BY ERIC MOYER (FIENDFODDER)", 1.5, null, 700, null, Flynn.Colors.CYAN);
+                ctx.vectorText("CREATED BY ERIC MOYER (FIENDFODDER)", 1.5, null, 700, null, Flynn.Colors.CYAN);
                 break;
 
              case this.VIEW_PHASES.SCORES:
@@ -185,7 +190,9 @@ Game.StateMenu = Flynn.State.extend({
                 }
                 break;
         } // end switch
-        ctx.vectorText(Flynn.mcp.credits + " Credits", 2, 10, Game.CANVAS_HEIGHT - 20, 'left', Flynn.Colors.CYAN);
+        if(Flynn.mcp.arcadeModeEnabled){
+            ctx.vectorText(Flynn.mcp.credits + " Credits", 2, 10, Game.CANVAS_HEIGHT - 20, 'left', Flynn.Colors.CYAN);
+        }
 
         ctx.vectorText('PRESS <ESCAPE> TO CONFIGURE CONTROLS', 1.5, null, 715, null, Flynn.Colors.GRAY);
         if(Flynn.mcp.backEnabled){
@@ -195,5 +202,9 @@ Game.StateMenu = Flynn.State.extend({
         Flynn.mcp.renderLogo(ctx);
     }
 });
+
+Game.get_keyname = function(virtual_button_name){
+    return Flynn.mcp.input.getVirtualButtonBoundKeyName(virtual_button_name).toUpperCase();
+};
 
 }()); // "use strict" wrapper

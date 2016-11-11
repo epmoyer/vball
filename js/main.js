@@ -146,11 +146,11 @@ Game.Main = Class.extend({
         //----------------------
         Game.sounds = {
             music:{ 
-                // intro: new Howl({
-                //     src: ['sounds/SpaceThemev3.mp3'],
-                //     loop: true,
-                //     buffer: !this.browserIsIos,  // Buffering causes problems on iOS devices
-                //     volume: 0.5 }),
+                intro: new Howl({
+                    src: ['sounds/DST-ClubFight.mp3'],
+                    loop: true,
+                    buffer: !this.browserIsIos,  // Buffering causes problems on iOS devices
+                    volume: 0.3 }),
             },
 
             // Interface
@@ -181,12 +181,12 @@ Game.Main = Class.extend({
                 Flynn.mcp.optionManager.getOption('soundEnabled')
                 );
             if(enabled){
-                // if(!Game.sounds.music.intro.playing()){
-                //     Game.sounds.music.intro.play();
-                // }
+                if(!Game.sounds.music.intro.playing()){
+                    Game.sounds.music.intro.play();
+                }
             }
             else{
-                // Game.sounds.music.intro.stop();
+                Game.sounds.music.intro.stop();
             }
         };
         Game.updateSound = function(){
@@ -199,7 +199,7 @@ Game.Main = Class.extend({
             var sound;
             var sound_enabled = Flynn.mcp.optionManager.getOption('soundEnabled');
             if (sound_enabled){
-                Game.sounds.insert_coin.play();
+                Flynn.sounds.ui_select.play();
             }
         };
 

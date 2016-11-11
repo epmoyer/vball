@@ -1,12 +1,12 @@
 // flynnMain
 //------------
-// This must be the first flynn script loaded
+// This must be the first Flynn script loaded
 
 var Flynn = Flynn || {}; // Create namespace
 
 (function () { "use strict"; 
 
-Flynn.VERSION = "2.1.4";
+Flynn.VERSION = "2.1.7";
  
 Flynn.init = function(
     canvasWidth,
@@ -24,7 +24,7 @@ Flynn.init = function(
         hideVectorModeOption= false;
     }
     
-    // The mcp will regester itself as Flynn.mcp when created
+    // The mcp will register itself as Flynn.mcp when created
     new Flynn.Mcp(
         canvasWidth,
         canvasHeight,
@@ -349,6 +349,25 @@ Flynn.Font.Block.Points.ASCII = [
     Flynn.Font.Block.Points.UNIMPLEMENTED_CHAR,      // _
     Flynn.Font.Block.Points.UNIMPLEMENTED_CHAR,      // `
 ];
+
+
+Flynn.sounds = {
+    ui_move: new Howl({
+        src: ['sounds/UI_move.webm','sounds/UI_move.mp3'],
+        volume: 0.4 }),
+    ui_select: new Howl({
+        src: ['sounds/UI_select.webm','sounds/UI_select.mp3'],
+        volume: 0.4 }),
+    ui_cancel: new Howl({
+        src: ['sounds/UI_cancel.webm','sounds/UI_cancel.mp3'],
+        volume: 0.4 }),
+    ui_success: new Howl({
+        src: ['sounds/UI_success.webm','sounds/UI_success.mp3'],
+        volume: 0.4 }),
+    ui_error: new Howl({
+        src: ['sounds/UI_error.webm','sounds/UI_error.mp3'],
+        volume: 0.4 }),
+};
 
 Flynn.Rect= Class.extend({
     init: function(left, top, width, height){

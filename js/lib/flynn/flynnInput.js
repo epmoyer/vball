@@ -106,6 +106,13 @@ Flynn.InputHandler = Class.extend({
 
         var self = this;
         this.keyDownHandler = function(evt){
+            if(evt.keyCode == Flynn.KeyboardMap.escape || 
+               evt.keyCode == Flynn.KeyboardMap.tab){
+                // Prevent default for 'Escape'.  This keeps Safari
+                // from exiting full-screen mode when escape is pressed.
+                // Tab prevents accidental interaction with the URL bar.
+                evt.preventDefault();
+            }
             //console.log("KeyDown: Code:" + evt.keyCode);
             if(self.iCadeModeEnabled){
                 var index = self.iCade.keyDownCodes.indexOf(evt.keyCode);
@@ -512,12 +519,19 @@ Flynn.InputHandler = Class.extend({
     },
 
     getVirtualButtonBoundKeyName: function(name){
+        var boundKeyCode, boundKeyName;
+
         if(this.virtualButtons[name]){
-            var boundKeyCode = this.virtualButtons[name].boundKeyCode;
-            var boundKeyName = this.keyCodeToKeyName(boundKeyCode);
+            boundKeyCode = this.virtualButtons[name].boundKeyCode;
+            boundKeyName = this.keyCodeToKeyName(boundKeyCode);
             return(boundKeyName);
         }
-        else{
+        else if(this.uiButtons[name]){
+            boundKeyCode = this.uiButtons[name].boundKeyCode;
+            boundKeyName = this.keyCodeToKeyName(boundKeyCode);
+            return(boundKeyName);
+        }
+        else {
             // Button does not exist
             console.log(
                 'Flynn: Warning: getVirtualButtonBoundKeyName() was called for virtual button  "' + name +
