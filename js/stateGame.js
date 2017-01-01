@@ -24,10 +24,12 @@ Game.StateGame = Flynn.State.extend({
     ROBOT_BODY_HEIGHT: 20,
     ROBOT_ARM_WIDTH: 10,
     ROBOT_ARM_HEIGHT: 45,
-    ROBOT_THRUST_IMPULSE: 0.06,
+    ROBOT_THRUST_IMPULSE: 0.04,
     ROBOT_ANGULAR_IMPULSE: 2.0,
     ROBOT_ANGULAR_IMPULSE_LIMIT: 5.0,
     ROBOT_ROTATE_RATE: 4.5,
+
+    RESTITUTION: 0.825, // Elasticity
     
     BALL_COLOR: Flynn.Colors.GREEN,
     BALL_RADIUS: 20,
@@ -91,6 +93,9 @@ Game.StateGame = Flynn.State.extend({
 
         this.physics = new Flynn.Physics(Flynn.mcp.canvas.ctx, this.GRAVITY_X, this.GRAVITY_Y, this.RENDER_SCALE);
 
+        // Fix so slow objects bounce off walls
+        Box2D.Common.b2Settings.b2_velocityThreshold=0;
+
         //-------------------
         // Playfield Barriers
         //-------------------
@@ -101,6 +106,7 @@ Game.StateGame = Flynn.State.extend({
             height: Game.CANVAS_HEIGHT/this.RENDER_SCALE,
             width: this.WALL_THICKNESS/this.RENDER_SCALE,
             color: this.BARRIER_COLOR,
+            restitution: this.RESTITUTION,
             });
         // Right Barrier
         new Flynn.Body(this.physics, { type: "static",
@@ -109,6 +115,7 @@ Game.StateGame = Flynn.State.extend({
             height: Game.CANVAS_HEIGHT/this.RENDER_SCALE,
             width: this.WALL_THICKNESS/this.RENDER_SCALE,
             color: this.BARRIER_COLOR,
+            restitution: this.RESTITUTION,
             });
         // Top Barrier
         new Flynn.Body(this.physics, { type: "static",
@@ -117,6 +124,7 @@ Game.StateGame = Flynn.State.extend({
             height: this.WALL_THICKNESS/this.RENDER_SCALE,
             width: (Game.CANVAS_WIDTH-2*this.WALL_THICKNESS)/this.RENDER_SCALE,
             color: this.BARRIER_COLOR,
+            restitution: this.RESTITUTION,
             });
         // Bottom Barrier
         new Flynn.Body(this.physics, { type: "static",
@@ -125,6 +133,7 @@ Game.StateGame = Flynn.State.extend({
             height: this.WALL_THICKNESS/this.RENDER_SCALE,
             width: (Game.CANVAS_WIDTH-2*this.WALL_THICKNESS)/this.RENDER_SCALE,
             color: this.BARRIER_COLOR,
+            restitution: this.RESTITUTION,
             });
     
         
@@ -139,6 +148,7 @@ Game.StateGame = Flynn.State.extend({
             height: this.BUMPER_LENGTH/this.RENDER_SCALE,
             width: this.BUMPER_THICKNESS/this.RENDER_SCALE,
             color: this.BUMPER_COLOR,
+            restitution: this.RESTITUTION,
             });
         // // Right Bumper
         new Flynn.Body(this.physics, { type: "static",
@@ -147,6 +157,7 @@ Game.StateGame = Flynn.State.extend({
             height: this.BUMPER_LENGTH/this.RENDER_SCALE,
             width: this.BUMPER_THICKNESS/this.RENDER_SCALE,
             color: this.BUMPER_COLOR,
+            restitution: this.RESTITUTION,
             });
         // // Top Bumper
         new Flynn.Body(this.physics, { type: "static",
@@ -155,6 +166,7 @@ Game.StateGame = Flynn.State.extend({
             height: this.BUMPER_THICKNESS/this.RENDER_SCALE,
             width: this.BUMPER_LENGTH/this.RENDER_SCALE,
             color: this.BUMPER_COLOR,
+            restitution: this.RESTITUTION,
             });
         // // Bottom Bumper
         new Flynn.Body(this.physics, { type: "static",
@@ -163,6 +175,7 @@ Game.StateGame = Flynn.State.extend({
             height: this.BUMPER_THICKNESS/this.RENDER_SCALE,
             width: this.BUMPER_LENGTH/this.RENDER_SCALE,
             color: this.BUMPER_COLOR,
+            restitution: this.RESTITUTION,
             });
         
 
@@ -191,6 +204,7 @@ Game.StateGame = Flynn.State.extend({
                     height: this.ROBOT_BODY_HEIGHT/this.RENDER_SCALE,
                     color: this.PLAYER_COLORS[player],
                     fixedRotation: true,
+                    restitution: this.RESTITUTION,
                 }).body;
             this.leftArm[player] = new Flynn.Body(this.physics, {
                     x: (this.ROBOT_START_X[player] - this.ROBOT_BODY_WIDTH/2 - this.ROBOT_ARM_WIDTH/2 - 0.1)/this.RENDER_SCALE,
@@ -199,6 +213,7 @@ Game.StateGame = Flynn.State.extend({
                     height: this.ROBOT_ARM_HEIGHT/this.RENDER_SCALE,
                     color: this.PLAYER_COLORS[player],
                     // fixedRotation: true,
+                    restitution: this.RESTITUTION,
                 }).body;
             this.rightArm[player] = new Flynn.Body(this.physics, {
                     x: (this.ROBOT_START_X[player] + this.ROBOT_BODY_WIDTH/2 + this.ROBOT_ARM_WIDTH/2 )/this.RENDER_SCALE,
@@ -207,6 +222,7 @@ Game.StateGame = Flynn.State.extend({
                     height: this.ROBOT_ARM_HEIGHT/this.RENDER_SCALE,
                     color: this.PLAYER_COLORS[player],
                     // fixedRotation: true,
+                    restitution: this.RESTITUTION,
                 }).body;
 
 
@@ -247,6 +263,7 @@ Game.StateGame = Flynn.State.extend({
                 color: this.BALL_COLOR,
                 radius:  this.BALL_RADIUS/this.RENDER_SCALE,
                 density: 0.2,
+                restitution: this.RESTITUTION,
                 });
 
         var self = this;

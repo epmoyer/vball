@@ -2,7 +2,7 @@ var Game = Game || {}; // Create namespace
 
 (function () { "use strict";
 
-Game.VERSION = '0.5';
+Game.VERSION = '1.2';
 Game.CANVAS_HEIGHT = 768;
 Game.CANVAS_WIDTH = 1024;
 Game.SPEED_FACTOR = 0.7;
@@ -164,7 +164,7 @@ Game.Main = Class.extend({
 
             // Primary
             bounce: new Howl({
-                src: ['sounds/Blocked.ogg','sounds/Blocked.mp3'],
+                src: ['sounds/BallBounce.webm','sounds/BallBounce.mp3'],
                 volume: 0.5 }),
             score: new Howl({
                 src: ['sounds/Tripple_blip.ogg','sounds/Tripple_blip.mp3'],
