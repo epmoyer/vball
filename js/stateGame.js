@@ -48,6 +48,7 @@ Game.StateGame = Flynn.State.extend({
 
     BOUNCE_LOCKOUT_TICKS: 15,
     BOUNCE_MIN_MAGNITUDE: 0.02,
+    BOUNCE_LOCKOUT_DISTANCE: 40,
 
     init_constants: function(){
         // Constants requiring dynamic initialization
@@ -271,9 +272,17 @@ Game.StateGame = Flynn.State.extend({
             var magnitude = Math.sqrt(
                 impulse.normalImpulses[0] * impulse.normalImpulses[0] + impulse.normalImpulses[1] * impulse.normalImpulses[1]);
             console.log("Bounce magnitude:" + magnitude);   
-            if (magnitude > self.BOUNCE_MIN_MAGNITUDE && !Flynn.mcp.timers.isRunning('bounceLockout')){
-                Game.sounds.bounce.play();
-                
+            // if (magnitude > self.BOUNCE_MIN_MAGNITUDE && !Flynn.mcp.timers.isRunning('bounceLockout')){
+            if (magnitude > self.BOUNCE_MIN_MAGNITUDE){
+                var in_hand = false;
+                var ball_pos = self.ballBody.GetPosition();
+                var body_pos = self.robotBody[0].GetPosition();
+                if(Flynn.Util.distance(ball_pos.x, ball_pos.y, body_pos.x, body_pos.y) < self.BOUNCE_LOCKOUT_DISTANCE / self.RENDER_SCALE){
+                    in_hand = true;
+                }
+                if (!in_hand){
+                    Game.sounds.bounce.play();
+                }
                 Flynn.mcp.timers.set('bounceLockout', self.BOUNCE_LOCKOUT_TICKS);
             }
             
