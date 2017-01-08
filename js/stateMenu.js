@@ -12,9 +12,11 @@ Game.StateMenu = Flynn.State.extend({
     VIEW_PHASES:{
         NORMAL: 0,
         SCORES: 1,
+        CREDITS: 2,
     },
     VIEW_PHASE_TICKS_NORMAL: 60 * 7,
     VIEW_PHASE_TICKS_SCORES: 60 * 4,
+    VIEW_PHASE_TICKS_CREDITS: 60 * 4,
 
     init: function(){
         this.view_phase = this.VIEW_PHASES.NORMAL;
@@ -84,13 +86,17 @@ Game.StateMenu = Flynn.State.extend({
         this.timers.update(paceFactor);
         if(this.timers.hasExpired("view_phase")){
             switch(this.view_phase){
-                case this.VIEW_PHASES.SCORES:
-                    this.view_phase = this.VIEW_PHASES.NORMAL;
-                    this.timers.set("view_phase", this.VIEW_PHASE_TICKS_NORMAL);
-                    break;
                 case this.VIEW_PHASES.NORMAL:
                     this.view_phase = this.VIEW_PHASES.SCORES;
                     this.timers.set("view_phase", this.VIEW_PHASE_TICKS_SCORES);
+                    break;
+                case this.VIEW_PHASES.SCORES:
+                    this.view_phase = this.VIEW_PHASES.CREDITS;
+                    this.timers.set("view_phase", this.VIEW_PHASE_TICKS_CREDITS);
+                    break;
+                case this.VIEW_PHASES.CREDITS:
+                    this.view_phase = this.VIEW_PHASES.NORMAL;
+                    this.timers.set("view_phase", this.VIEW_PHASE_TICKS_NORMAL);
                     break;
             }
         }
@@ -114,6 +120,7 @@ Game.StateMenu = Flynn.State.extend({
 
         var startText;
         var controlsText1='', controlsText2='';
+        var credit_text, y_step, y_text, line_text, line_color;
 
         switch(this.view_phase){
             case this.VIEW_PHASES.NORMAL:
@@ -196,6 +203,35 @@ Game.StateMenu = Flynn.State.extend({
                     ctx.vectorText(leader.name, 2, 360, y_top+25*i, 'left', Flynn.Colors.CYAN);
                     ctx.vectorText(Flynn.Util.ticksToTime(leader.score), 2, 660, y_top+25*i,'right', Flynn.Colors.CYAN);
                 }
+                break;
+
+            case this.VIEW_PHASES.CREDITS:
+                credit_text = [
+                    'CREDITS',
+                    '',
+                    "CREATED BY ERIC MOYER",
+                    '',
+                    'MUSIC "DST-CLUBFIGHT" BY MORTEN BARFOD S0EGAARD',
+                    'LITTLE ROBOT SOUND FACTORY',
+                    'WWW.LITTLEROBOTSOUNDFACTORY.COM',
+                    '',
+                    'MORE GAMES AT VECTORALCHEMY.COM',
+                    '',
+                    'WANT TO HELP?',
+                    '*WWW.PATREON.COM/VECTORALCHEMY'
+                ];
+                y_step = 25;
+                y_text = Game.CANVAS_HEIGHT/2 - y_step*credit_text.length/2;
+                for(i=0; i<credit_text.length; i++){
+                    line_text = credit_text[i];
+                    line_color = Flynn.Colors.GREEN;
+                    if(line_text.startsWith('*')){
+                        line_color = Flynn.Colors.ORANGE;
+                        line_text = line_text.substring(1);
+                    }
+                    ctx.vectorText(line_text, 2, null, y_text + y_step*i, null, line_color);
+                }
+
                 break;
         } // end switch
         if(Flynn.mcp.arcadeModeEnabled){

@@ -104,6 +104,8 @@ Flynn.InputHandler = Class.extend({
         this.addiCadeMapping('icade_b3',    'k', 'p');
         this.addiCadeMapping('icade_b4',    'l', 'v');
 
+        this.touchable_elements = [];
+
         var self = this;
         this.keyDownHandler = function(evt){
             if(evt.keyCode == Flynn.KeyboardMap.escape || 
@@ -176,16 +178,38 @@ Flynn.InputHandler = Class.extend({
                 document.addEventListener(
                     'mousedown',
                     function(event){
+                        // event.preventDefault();
                         if(Flynn.mcp.halted){
                             Flynn.mcp.devResume();
                         }
                         if(Flynn.mcp.mousetouchEnabled){
-                            var canvas = Flynn.mcp.canvas.canvas;
+                            var canvas = Flynn.mcp.touch_control_canvas.canvas;
                             var rect = canvas.getBoundingClientRect();
-                            var x = (event.clientX - rect.left) * Flynn.mcp.canvasWidth / canvas.clientWidth;
-                            var y = (event.clientY - rect.top) * Flynn.mcp.canvasHeight / canvas.clientHeight;
+                            var x = (event.clientX - rect.left) * canvas.width / canvas.clientWidth;
+                            var y = (event.clientY - rect.top) * canvas.height / canvas.clientHeight;
                             //console.log("DEV: mousedown ",x,y);
-                            self.handleTouchStart(x, y, self.MOUSE_IDENTIFIER);
+                            var event_caught = self.handleTouchStart(x, y, self.MOUSE_IDENTIFIER);
+                            if(!event_caught){
+                                console.log("mousedown not caught");
+                            //     var i;
+                            //     for(i=0; i<self.touchable_elements.length; i++){
+                            //         var element = self.touchable_elements[i];
+                            //         element = document.getElementById("info");
+                            //         Flynn.Util.event_simulator.simulate(
+                            //             element,
+                            //             "mousedown",
+                            //             { pointerX: event.clientX, pointerY: event.clientY }
+                            //             );
+                            //         Flynn.Util.event_simulator.simulate(
+                            //             element,
+                            //             "mouseup",
+                            //             { pointerX: event.clientX, pointerY: event.clientY }
+                            //             );
+                            //     }
+                            }
+                            else {
+                                event.preventDefault();
+                            }
                         }
                     },
                     false
@@ -201,12 +225,19 @@ Flynn.InputHandler = Class.extend({
                 document.addEventListener(
                     'mouseup',
                     function(event){
-                        var canvas = Flynn.mcp.canvas.canvas;
+                        // event.preventDefault();
+                        var canvas = Flynn.mcp.touch_control_canvas.canvas;
                         var rect = canvas.getBoundingClientRect();
-                        var x = (event.clientX - rect.left) * Flynn.mcp.canvasWidth / canvas.clientWidth;
-                        var y = (event.clientY - rect.top) * Flynn.mcp.canvasHeight / canvas.clientHeight;
+                        var x = (event.clientX - rect.left) * canvas.width / canvas.clientWidth;
+                        var y = (event.clientY - rect.top) * canvas.height / canvas.clientHeight;
                         //console.log("DEV: mouseup ",x,y);
-                        self.handleTouchEnd(x, y, self.MOUSE_IDENTIFIER);
+                        var event_caught = self.handleTouchEnd(x, y, self.MOUSE_IDENTIFIER);
+                        if(!event_caught){
+                            console.log("mouseup not caught");
+                        }
+                        else{
+                            event.preventDefault();
+                        }
                     },
                     false
                 );
@@ -219,12 +250,13 @@ Flynn.InputHandler = Class.extend({
                 document.addEventListener(
                     'mousemove',
                     function(event){
+                        event.preventDefault();
                         // If a button is pressed
                         if(event.which){
-                            var canvas = Flynn.mcp.canvas.canvas;
+                            var canvas = Flynn.mcp.touch_control_canvas.canvas;
                             var rect = canvas.getBoundingClientRect();
-                            var x = (event.clientX - rect.left) * Flynn.mcp.canvasWidth / canvas.clientWidth;
-                            var y = (event.clientY - rect.top) * Flynn.mcp.canvasHeight / canvas.clientHeight;
+                            var x = (event.clientX - rect.left) * canvas.width / canvas.clientWidth;
+                            var y = (event.clientY - rect.top) * canvas.height / canvas.clientHeight;
                             //console.log("DEV: mousemove ",x,y);
                             self.handleTouchMove(x, y, self.MOUSE_IDENTIFIER);
                         }
@@ -241,19 +273,22 @@ Flynn.InputHandler = Class.extend({
             document.addEventListener(
                 'touchstart',
                 function(event){
-                    event.preventDefault();
-                    var touch=event.changedTouches[0];
-                    // var x = touch.pageX * Flynn.mcp.canvasWidth / window.innerWidth;
-                    // var y = touch.pageY * Flynn.mcp.canvasHeight / window.innerHeight;
+                    var i;
+                    var event_caught = false;
+                    for(i=0; i<event.changedTouches.length; i++){
+                        var touch=event.changedTouches[i];
 
-                    var canvas = Flynn.mcp.canvas.canvas;
-                    var rect = canvas.getBoundingClientRect();
-                    var x = (touch.pageX - rect.left) * Flynn.mcp.canvasWidth / canvas.clientWidth;
-                    var y = (touch.pageY - rect.top) * Flynn.mcp.canvasHeight / canvas.clientHeight;
+                        var canvas = Flynn.mcp.touch_control_canvas.canvas;
+                        var rect = canvas.getBoundingClientRect();
+                        var x = (touch.pageX - rect.left) * canvas.width / canvas.clientWidth;
+                        var y = (touch.pageY - rect.top) * canvas.height / canvas.clientHeight;
 
-
-                    console.log("DEV: touchstart ",x,y,touch.identifier);
-                    self.handleTouchStart(x, y, touch.identifier);
+                        //console.log("DEV: touchstart ",x,y,touch.identifier);
+                        event_caught |= self.handleTouchStart(x, y, touch.identifier);
+                    }
+                    if(event_caught){
+                        event.preventDefault();
+                    }
                 },
                 false
             );
@@ -266,19 +301,22 @@ Flynn.InputHandler = Class.extend({
             document.addEventListener(
                 'touchend',
                 function(event){
-                    event.preventDefault();
-                    var touch=event.changedTouches[0];
-                    // var x = touch.pageX;
-                    // var y = touch.pageY;
+                    var i;
+                    var event_caught = false;
+                    for(i=0; i<event.changedTouches.length; i++){
+                        var touch=event.changedTouches[i];
                     
-                    var canvas = Flynn.mcp.canvas.canvas;
-                    var rect = canvas.getBoundingClientRect();
-                    var x = (touch.pageX - rect.left) * Flynn.mcp.canvasWidth / canvas.clientWidth;
-                    var y = (touch.pageY - rect.top) * Flynn.mcp.canvasHeight / canvas.clientHeight;
+                        var canvas = Flynn.mcp.touch_control_canvas.canvas;
+                        var rect = canvas.getBoundingClientRect();
+                        var x = (touch.pageX - rect.left) * canvas.width / canvas.clientWidth;
+                        var y = (touch.pageY - rect.top) * canvas.height / canvas.clientHeight;
 
-
-                    console.log("DEV: touchend ",x,y,touch.identifier);
-                    self.handleTouchEnd(x, y, touch.identifier);
+                        //console.log("DEV: touchend ",x,y,touch.identifier);
+                        event_caught |= self.handleTouchEnd(x, y, touch.identifier);
+                    }
+                    if(event_caught){
+                        event.preventDefault();
+                    }
                 },
                 false
             );
@@ -293,13 +331,11 @@ Flynn.InputHandler = Class.extend({
                 function(event){
                     event.preventDefault();
                     var touch=event.changedTouches[0];
-                    // var x = touch.pageX;
-                    // var y = touch.pageY;
 
-                    var canvas = Flynn.mcp.canvas.canvas;
+                    var canvas = Flynn.mcp.touch_control_canvas.canvas;
                     var rect = canvas.getBoundingClientRect();
-                    var x = (touch.pageX - rect.left) * Flynn.mcp.canvasWidth / canvas.clientWidth;
-                    var y = (touch.pageY - rect.top) * Flynn.mcp.canvasHeight / canvas.clientHeight;
+                    var x = (touch.pageX - rect.left) * canvas.width / canvas.clientWidth;
+                    var y = (touch.pageY - rect.top) * canvas.height / canvas.clientHeight;
 
                     console.log("DEV: touchmove ",x,y);
                     self.handleTouchMove(x, y, touch.identifier);
@@ -312,9 +348,19 @@ Flynn.InputHandler = Class.extend({
         }
     },
 
+    addTouchableElement: function(element){
+        this.touchable_elements.push(element);
+    },
+
     handleTouchStart: function(x,y,touch_identifier){
+        // Process a "touchstart" event and apply it to the appropriate virtual control (button/joystick)
+        // if one exists.  
+        // Returns true if a control caught the event, else false.
+
         //console.log("DEV: handleTouchStart() ",x,y);
-        var name, region, joystick, touched;
+        var name, region, joystick, touched, event_caught;
+
+        event_caught = false;
         for(name in this.touchRegions){
             region = this.touchRegions[name];
             if(region.shape == 'round'){
@@ -337,18 +383,26 @@ Flynn.InputHandler = Class.extend({
                         '" but no virtual button exists with that name.  The touch will go unreported.');
                 }
                 region.touchStartIdentifier = touch_identifier;
+                event_caught = true;
             }
         }
         for(name in this.virtualJoysticks){
             joystick = this.virtualJoysticks[name];
-            joystick.handleTouchStart(x,y,touch_identifier);
+            event_caught |= joystick.handleTouchStart(x,y,touch_identifier);
             this.setButtonsFromJoystick(joystick);
         }
+        return event_caught;
     },
 
     handleTouchEnd: function(x,y,touch_identifier){
+        // Process a "touchend" event and apply it to the appropriate virtual control (button/joystick)
+        // if one exists.  
+        // Returns true if a control caught the event, else false.
+
         //console.log("DEV: handleTouchEnd() ",x,y);
-        var name, region, joystick, direction;
+        var name, region, joystick, direction, i, event_caught;
+
+        event_caught = false;
         for(name in this.touchRegions){
             region = this.touchRegions[name];
             // If the unique identifier associated with this touchend event matches
@@ -365,6 +419,8 @@ Flynn.InputHandler = Class.extend({
                     this.uiButtons[name].isDown = false;
                     this.uiButtons[name].pressWasReported = false;
                 }
+                region.touchStartIdentifier = 0;
+                event_caught = true;
             }
         }
         for(name in this.virtualJoysticks){
@@ -382,8 +438,10 @@ Flynn.InputHandler = Class.extend({
                         }
                     }
                 }
+                event_caught = true;
             }
         }
+        return event_caught;
     },
 
     handleTouchMove: function(x,y,touch_identifier){
@@ -397,7 +455,7 @@ Flynn.InputHandler = Class.extend({
     },
 
     setButtonsFromJoystick: function(joystick){
-        var direction, name;
+        var direction, name, i;
         if(joystick.in_use){
             // Joystick in use. Assign state of all associated buttons to match joystick
             for(i=0; i<this.DIRECTIONS.length; i++){
@@ -518,7 +576,7 @@ Flynn.InputHandler = Class.extend({
         return names;
     },
 
-    getVirtualButtonBoundKeyName: function(name){
+     getVirtualButtonBoundKeyName: function(name){
         var boundKeyCode, boundKeyName;
 
         if(this.virtualButtons[name]){
@@ -531,7 +589,7 @@ Flynn.InputHandler = Class.extend({
             boundKeyName = this.keyCodeToKeyName(boundKeyCode);
             return(boundKeyName);
         }
-        else {
+        else{
             // Button does not exist
             console.log(
                 'Flynn: Warning: getVirtualButtonBoundKeyName() was called for virtual button  "' + name +
@@ -742,6 +800,13 @@ Flynn.InputHandler = Class.extend({
             delete(this.virtualJoysticks[joystick.name]);
         }
         this.virtualJoysticks[joystick.name] = joystick;
+    },
+
+    getAnalogJoystickPosition: function(name){
+        if (!this.virtualJoysticks[name]){
+            return null;
+        }
+        return this.virtualJoysticks[name].analog_pos;
     },
 
     updateVisibilityAllControls: function() {
