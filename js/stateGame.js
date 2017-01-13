@@ -276,9 +276,13 @@ Game.StateGame = Flynn.State.extend({
             if (magnitude > self.BOUNCE_MIN_MAGNITUDE){
                 var in_hand = false;
                 var ball_pos = self.ballBody.GetPosition();
-                var body_pos = self.robotBody[0].GetPosition();
-                if(Flynn.Util.distance(ball_pos.x, ball_pos.y, body_pos.x, body_pos.y) < self.BOUNCE_LOCKOUT_DISTANCE / self.RENDER_SCALE){
-                    in_hand = true;
+                var i, body_pos;
+                // Check whether a player is holding the ball
+                for(i=0; i<self.numPlayers; i++){                
+                    body_pos = self.robotBody[i].GetPosition();
+                    if(Flynn.Util.distance(ball_pos.x, ball_pos.y, body_pos.x, body_pos.y) < self.BOUNCE_LOCKOUT_DISTANCE / self.RENDER_SCALE){
+                        in_hand = true;
+                    }
                 }
                 if (!in_hand){
                     Game.sounds.bounce.play();
