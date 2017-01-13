@@ -50,6 +50,11 @@ Game.StateGame = Flynn.State.extend({
     BOUNCE_MIN_MAGNITUDE: 0.02,
     BOUNCE_LOCKOUT_DISTANCE: 40,
 
+    FLAME_GROW_RATE: 4/60,
+    FLAME_LENGTH_MAX: 20,
+    FLAME_WIDTH_MAX: 10,
+    FLAME_SEPARATION: 20,
+
     init_constants: function(){
         // Constants requiring dynamic initialization
 
@@ -195,6 +200,7 @@ Game.StateGame = Flynn.State.extend({
         this.rightArm = [null, null];
         this.leftArmJoint =[null, null];
         this.rightArmJoint = [null, null];
+        this.flameSize = [0, 0];
 
         var player;
         for(player=0, len=this.numPlayers; player<len; player++){
@@ -312,7 +318,8 @@ Game.StateGame = Flynn.State.extend({
     },
 
     destructor: function(){
-        Game.sounds.thrust.stop();
+        Game.sounds.thrust0.stop();
+        Game.sounds.thrust1.stop();
     },
 
     resetLevel: function(){
@@ -382,7 +389,8 @@ Game.StateGame = Flynn.State.extend({
         }
 
         if (this.gameOver && input.virtualButtonWasPressed("UI_enter")){
-            Game.sounds.thrust.stop();
+            Game.sounds.thrust0.stop();
+            Game.sounds.thrust1.stop();
             if(this.numPlayers==1){
                 Flynn.mcp.changeState(Game.States.END);
             }
@@ -421,14 +429,27 @@ Game.StateGame = Flynn.State.extend({
 
             if(input.virtualButtonIsDown(pNum + 'thrust')){
                 this.robotBody[i].ApplyImpulse({ x: Math.cos(angle)*force, y: Math.sin(angle)*force }, center);
-                if(!this.thrusting[0] && !this.thrusting[1]){
+                if(!this.thrusting[i]){
                     this.thrusting[i]=true;
-                    Game.sounds.thrust.play();
+                    if(i==0){
+                        Game.sounds.thrust0.play();
+                    }
+                    else{
+                        Game.sounds.thrust1.play();
+                    }
                 }
+                this.flameSize[i] += this.FLAME_GROW_RATE;
+                this.flameSize[i] = Math.min(this.flameSize[i], 1.0);
             } else{
                 this.thrusting[i]=false;
-                if(!this.thrusting[0] && !this.thrusting[1]){
-                    Game.sounds.thrust.stop();
+                this.flameSize[i]=0;
+                if(!this.thrusting[i]){
+                    if(i==0){
+                        Game.sounds.thrust0.stop();
+                    }
+                    else{
+                        Game.sounds.thrust1.stop();
+                    }
                 }
             }
 
@@ -486,7 +507,7 @@ Game.StateGame = Flynn.State.extend({
     },
 
     render: function(ctx){
-        var i, len;
+        var i, len, body_pos, x, y, angle, j, vec_x, vec_y, draw_pos;
 
         ctx.clearAll();
 
@@ -506,7 +527,38 @@ Game.StateGame = Flynn.State.extend({
         for(i=0, len=this.numPlayers; i<len; i++){
             ctx.vectorRect(this.GOAL_X[i], this.GOAL_Y[i], this.GOAL_SIZE, this.GOAL_SIZE, this.GOAL_COLORS[i]);
         }
+
+        // Render players and ball
         this.physics.render(ctx);
+
+        // Render flames
+        for(i=0, len=this.numPlayers; i<len; i++){
+            if(this.flameSize[i] > 0){
+                body_pos = this.robotBody[i].GetPosition();
+                x = body_pos.x * this.RENDER_SCALE;
+                y = body_pos.y * this.RENDER_SCALE;
+                angle = this.robotBody[i].GetAngle();
+                // Draw two flames
+                ctx.vectorStart(Flynn.Colors.ORANGE);
+                for(j=-1; j<2; j+=2){
+                    vec_y = this.ROBOT_BODY_HEIGHT/2;
+                    vec_x = j*(this.FLAME_SEPARATION/2 - this.flameSize[i]*this.FLAME_WIDTH_MAX/2);
+                    draw_pos = this.translate(vec_x, vec_y, x, y, angle);
+                    ctx.vectorMoveTo(draw_pos.x, draw_pos.y);
+
+                    vec_y = this.ROBOT_BODY_HEIGHT/2 + this.flameSize[i]*this.FLAME_LENGTH_MAX;
+                    vec_x = j*(this.FLAME_SEPARATION/2);
+                    draw_pos = this.translate(vec_x, vec_y, x, y, angle);
+                    ctx.vectorLineTo(draw_pos.x, draw_pos.y);
+
+                    vec_y = this.ROBOT_BODY_HEIGHT/2;
+                    vec_x = j*(this.FLAME_SEPARATION/2 + this.flameSize[i]*this.FLAME_WIDTH_MAX/2);
+                    draw_pos = this.translate(vec_x, vec_y, x, y, angle);
+                    ctx.vectorLineTo(draw_pos.x, draw_pos.y);
+                }
+                ctx.vectorEnd();
+            }
+        }
 
         ctx.vectorRect(this.WALL_THICKNESS-1,this.WALL_THICKNESS-1,Game.CANVAS_WIDTH-this.WALL_THICKNESS*2+2, Game.CANVAS_HEIGHT-this.WALL_THICKNESS*2+2, Flynn.Colors.GRAY);
 
@@ -515,6 +567,15 @@ Game.StateGame = Flynn.State.extend({
             ctx.vectorText("GAME OVER", 6, null, 230, null, Flynn.Colors.YELLOW);
             ctx.vectorText("PRESS <ENTER>", 2, null, 280, null, Flynn.Colors.YELLOW);
         }
+    },
+
+    translate: function(x, y, offset_x, offset_y, angle){
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+        return {
+            x: x * c - y * s + offset_x,
+            y: x * s + y * c + offset_y
+        }; 
     }
 });
 
