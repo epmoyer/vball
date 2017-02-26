@@ -54,6 +54,7 @@ Game.StateGame = Flynn.State.extend({
     FLAME_LENGTH_MAX: 20,
     FLAME_WIDTH_MAX: 10,
     FLAME_SEPARATION: 20,
+    FLAME_JITTER: 0.7,
 
     init_constants: function(){
         // Constants requiring dynamic initialization
@@ -440,6 +441,9 @@ Game.StateGame = Flynn.State.extend({
                 }
                 this.flameSize[i] += this.FLAME_GROW_RATE;
                 this.flameSize[i] = Math.min(this.flameSize[i], 1.0);
+                if(this.flameSize[i] == 1.0){
+                    this.flameSize[i] = this.FLAME_JITTER;
+                }
             } else{
                 this.thrusting[i]=false;
                 this.flameSize[i]=0;

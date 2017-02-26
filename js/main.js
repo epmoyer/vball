@@ -2,7 +2,7 @@ var Game = Game || {}; // Create namespace
 
 (function () { "use strict";
 
-Game.VERSION = '1.6';
+Game.VERSION = '1.8';
 Game.CANVAS_HEIGHT = 768;
 Game.CANVAS_WIDTH = 1024;
 Game.SPEED_FACTOR = 0.7;
@@ -170,11 +170,11 @@ Game.Main = Class.extend({
                 src: ['sounds/Tripple_blip.ogg','sounds/Tripple_blip.mp3'],
                 volume: 0.5 }),
             thrust0: new Howl({
-                src: ['sounds/Engine0.webm','sounds/Engine0.mp3'],
+                src: ['sounds/Engine0.mp3'],
                 volume: 0.2,
                 loop: true }),
             thrust1: new Howl({
-                src: ['sounds/Engine1.webm','sounds/Engine1.mp3'],
+                src: ['sounds/Engine1.mp3'],
                 volume: 0.2,
                 loop: true }),
         };
