@@ -2,3 +2,4 @@
 .dropbox
 js/lib/flynn/*.sh
 scrapbook
+deploy.sh
