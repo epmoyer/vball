@@ -25,8 +25,7 @@ Game.StateMenu = Flynn.State.extend({
         this.timers.add("view_phase", this.VIEW_PHASE_TICKS_NORMAL, null);
 
         this.va_logo = new Flynn.VALogo(
-            60,
-            Flynn.mcp.canvasHeight - 60,
+            new Victor(60, Flynn.mcp.canvasHeight - 60),
             1,
             false);
     },

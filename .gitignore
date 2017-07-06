@@ -1,5 +1,8 @@
 .DS_Store
 .dropbox
 js/lib/flynn/*.sh
+js/lib/flynn/flynn*.js
+js/lib/flynn/flynn.core.min.js.source-map
 scrapbook
 deploy.sh
+deploy-exclude.txt

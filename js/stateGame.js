@@ -278,7 +278,7 @@ Game.StateGame = Flynn.State.extend({
         ball.contact = function (contact, impulse, first) {
             var magnitude = Math.sqrt(
                 impulse.normalImpulses[0] * impulse.normalImpulses[0] + impulse.normalImpulses[1] * impulse.normalImpulses[1]);
-            console.log("Bounce magnitude:" + magnitude);   
+            //console.log("Bounce magnitude:" + magnitude);   
             // if (magnitude > self.BOUNCE_MIN_MAGNITUDE && !Flynn.mcp.timers.isRunning('bounceLockout')){
             if (magnitude > self.BOUNCE_MIN_MAGNITUDE){
                 var in_hand = false;
