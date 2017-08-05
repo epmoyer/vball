@@ -1,4 +1,5 @@
 .DS_Store
+Untracked/
 .dropbox
 js/lib/flynn/*.sh
 js/lib/flynn/flynn*.js
