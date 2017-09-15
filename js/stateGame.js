@@ -413,11 +413,17 @@ Game.StateGame = Flynn.State.extend({
             center_v = new Victor(center.x, center.y);
             var rotationApplied = false;
             if(input.virtualButtonIsDown(pNum + 'left')){
+                // Apply a zero impulse, so that angular rotation works if robot is not moving.
+                this.robotBody[i].ApplyImpulse({ x: 0, y: 0}, center);
+
                 this.robotBody[i].SetAngularVelocity(-this.ROBOT_ROTATE_RATE);
                 this.rotationDampenPending[i] = true;
                 rotationApplied = true;
             }
             if(input.virtualButtonIsDown(pNum + 'right')){
+                // Apply a zero impulse, so that angular rotation works if robot is not moving.
+                this.robotBody[i].ApplyImpulse({ x: 0, y: 0}, center);
+
                 this.robotBody[i].SetAngularVelocity(this.ROBOT_ROTATE_RATE);
                 this.rotationDampenPending[i] = true;
                 rotationApplied = true;
@@ -512,8 +518,6 @@ Game.StateGame = Flynn.State.extend({
 
     render: function(ctx){
         var i, len, body_pos, x, y, angle, j, vec_x, vec_y, draw_pos;
-
-        ctx.clearAll();
 
         //------------
         // Text

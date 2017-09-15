@@ -104,7 +104,6 @@ Game.StateMenu = Flynn.State.extend({
     },
 
     render: function(ctx) {
-        ctx.clearAll();
         var title_step = 5;
         var is_world = false;
         var i, len, leader;
